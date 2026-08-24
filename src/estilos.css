@@ -347,6 +347,21 @@ tbody tr:last-child td { border-bottom: 0; }
 .lp-tabela { margin: 26px 0 24px; }
 .lp-tabela .bom { color: var(--acento); font-weight: 700; }
 .lp-tabela .ruim { color: var(--perigo); font-weight: 700; }
+/*
+  A tabela da landing cabe inteira e nao deve rolar.
+
+  `table` traz `min-width: 560px` e `thead th` traz `white-space: nowrap`.
+  Existem pras tabelas do aplicativo, que sao largas de verdade — a carteira
+  tem sete colunas. Herdadas aqui, forcavam barra de rolagem numa tabela de
+  tres colunas curtas, dentro de um container de 68ch. E esconder meia coluna
+  enfraquece justamente o argumento que a secao faz: o numero da direita e a
+  conclusao da linha.
+*/
+.lp-tabela table { min-width: 0; }
+.lp-tabela thead th { white-space: normal; }
+@media (max-width: 560px) {
+  .lp-tabela th, .lp-tabela td { padding: 9px 10px; }
+}
 
 /* ------------------------------------------------------------------ passos */
 .lp-passos {
