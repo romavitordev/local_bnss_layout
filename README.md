@@ -3,7 +3,7 @@
 Vitrine **estática** do front do [Motor de Reservas](https://github.com/romavitordev/local-business-scraper),
 publicada no GitHub Pages. React + TypeScript + Vite, com React Router.
 
-**No ar:** https://romavitordev.github.io/layout_leads/
+**No ar:** https://romavitordev.github.io/local_bnss_layout/
 
 > Só o front mora aqui. O produto completo tem backend em FastAPI —
 > autenticação, motor de alocação, carteira, territórios e exportação —
@@ -25,11 +25,11 @@ npm run build    # gera dist/
 
 | | |
 |---|---|
-| `base` | `/layout_leads/` — o Pages de projeto serve em subcaminho |
+| `base` | `/local_bnss_layout/` — o Pages de projeto serve em subcaminho |
 | `basename` do router | vem do `BASE_URL`, senão a navegação cai fora do subcaminho |
 | proxy `/api` | removido; não há backend para onde apontar |
 | `404.html` | cópia do `index.html`, para link profundo não cair em 404 |
 
 O `404.html` existe porque o GitHub Pages serve arquivo estático: sem
-ele, abrir `/layout_leads/entrar` direto na barra de endereço devolve a
+ele, abrir `/local_bnss_layout/entrar` direto na barra de endereço devolve a
 página de erro do Pages em vez do app.

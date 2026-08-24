@@ -32,7 +32,7 @@ jobs:
         run: npm run build
 
       # O Pages serve arquivo estático: sem esta cópia, abrir
-      # /layout_leads/entrar direto na barra devolve o 404 do Pages em
+      # /local_bnss_layout/entrar direto na barra devolve o 404 do Pages em
       # vez do app. O React Router assume a rota a partir do index.
       - name: SPA fallback
         run: cp dist/index.html dist/404.html

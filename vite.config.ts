@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react'
  * Difere do front original em dois pontos, e os dois vêm de onde ele vai
  * morar — um subcaminho, sem servidor:
  *
- *   `base`   o Pages de projeto serve em /layout_leads. Sem isso o HTML
+ *   `base`   o Pages de projeto serve em /local_bnss_layout. Sem isso o HTML
  *            pede /assets/... na raiz e a página sobe sem CSS nem JS.
  *
  *   sem proxy  não há backend aqui. O `/api` do original apontava pro
@@ -16,6 +16,6 @@ import react from '@vitejs/plugin-react'
  */
 export default defineConfig({
   plugins: [react()],
-  base: '/layout_leads/',
+  base: '/local_bnss_layout/',
   build: { outDir: 'dist' },
 })
