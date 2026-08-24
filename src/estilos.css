@@ -362,6 +362,46 @@ tbody tr:last-child td { border-bottom: 0; }
 .lp-passos h3 { font-size: 1.06rem; margin: 0 0 8px; }
 .lp-passos p { font-size: 0.95rem; margin: 0; }
 
+
+/* --------------------------------------------------------------- preços */
+/* Faltavam por completo: com a API no ar, a seção renderizava como texto
+   empilhado sem caixa, sem alinhamento e sem destaque de plano. */
+.plans {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px; align-items: start;
+}
+.plan {
+  display: flex; flex-direction: column;
+  background: var(--papel); border: 1px solid var(--linha);
+  border-radius: var(--raio); padding: 22px 20px;
+}
+/* O plano em evidência ganha a borda de acento, não um tamanho diferente:
+   cartão maior desalinha a leitura das linhas equivalentes. */
+.plan.hi { border-color: var(--acento); box-shadow: var(--sombra); }
+.plan .nm {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.09em; color: var(--apagado);
+}
+.plan .pr {
+  display: block; margin: 10px 0 2px;
+  font-size: 1.85rem; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.plan .pr small { font-size: 0.9rem; font-weight: 400; color: var(--apagado); }
+.plan dl {
+  margin: 16px 0 0; padding-top: 14px;
+  border-top: 1px solid var(--linha); flex: 1;
+}
+.plan dl > div {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; padding: 5px 0;
+}
+.plan dt { font-size: 13px; color: var(--apagado); }
+.plan dd { margin: 0; font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Sao quatro planos: deixado so no auto-fit, o meio-termo quebra em 3+1 e
+   sobra um cartao orfao numa linha vazia. 4 / 2x2 / 1 sempre fecha linha. */
+@media (max-width: 980px) { .plans { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .plans { grid-template-columns: 1fr; } }
 .lp-plano-btn { margin-top: 14px; text-align: center; text-decoration: none; }
 
 /* -------------------------------------------------------------- fechamento */

@@ -2,12 +2,13 @@
  * Aviso de que esta é a vitrine estática, sem backend.
  *
  * O produto real tem API em FastAPI: autenticação, carteira, territórios
- * e exportação. Aqui só existe o front, publicado no GitHub Pages — as
- * chamadas a `/api` batem em 404.
+ * e exportação. Este repositório publica só a página pública, no GitHub
+ * Pages — as telas do aplicativo não estão aqui, porque sem backend elas
+ * seriam telas mortas.
  *
- * Sem este aviso, quem tentasse entrar veria erro de rede e concluiria
- * que o produto está quebrado. Dizer que é vitrine é a diferença entre
- * uma limitação declarada e um defeito aparente.
+ * Sem este aviso, quem procurasse o login concluiria que falta metade do
+ * produto. Dizer que é vitrine é a diferença entre um recorte declarado e
+ * uma ausência que parece descuido.
  */
 export default function AvisoDemo() {
   return (
@@ -28,7 +29,7 @@ export default function AvisoDemo() {
         backdropFilter: 'blur(8px)',
       }}
     >
-      Vitrine estática do layout — o backend (API, login e carteira) não roda aqui.{' '}
+      Vitrine do layout — só a página pública. Login, carteira e painel vivem no produto completo.{' '}
       <a
         href="https://github.com/romavitordev/local-business-scraper"
         target="_blank"

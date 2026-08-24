@@ -1,6 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { api, ErroApi, type Cobertura, type Plano } from "../api/cliente";
+import { useState, type FormEvent } from "react";
 
 function reais(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", {
@@ -9,6 +7,34 @@ function reais(centavos: number): string {
     maximumFractionDigits: 0,
   });
 }
+
+/**
+ * VITRINE — os dados vivem aqui, nao na API.
+ *
+ * No produto, precos e cobertura vem de `/api/publico/planos` e
+ * `/api/publico/cobertura`. Este repositorio publica so o layout, num host
+ * estatico: aquelas chamadas dariam 404 e a pagina cairia nos estados
+ * vazios — sem tabela de precos e sem a prova de cobertura.
+ *
+ * Uma vitrine que esconde justamente a secao de precos nao mostra o
+ * produto. Por isso os valores estao fixos aqui, copiados do `seed.py` do
+ * backend, para que o que se ve seja a oferta real e nao numeros
+ * inventados para preencher tela.
+ */
+
+/**
+ * Espelha PLANOS do seed, sem o "teste" — que o backend tambem omite da
+ * landing: e o destino do cadastro, nao uma opcao a comparar.
+ */
+const PLANOS = [
+  { id: 2, nome: "Início", preco_centavos: 9700, carteira_max: 500, ofertas_incluidas: 1 },
+  { id: 3, nome: "Solo", preco_centavos: 19700, carteira_max: 1500, ofertas_incluidas: 1 },
+  { id: 4, nome: "Equipe", preco_centavos: 49700, carteira_max: 4500, ofertas_incluidas: 2 },
+  { id: 5, nome: "Operação", preco_centavos: 89700, carteira_max: 9000, ofertas_incluidas: 3 },
+];
+
+/** Numeros arredondados, como a rota real faz de proposito. */
+const COBERTURA = { empresas: 3000, cidades: 5 };
 
 /** A tabela que sustenta o argumento inteiro: repetir a mesma oferta queima. */
 const SATURACAO = [
@@ -38,37 +64,24 @@ const PASSOS = [
 ];
 
 export default function Landing() {
-  const [planos, setPlanos] = useState<Plano[]>([]);
-  const [cobertura, setCobertura] = useState<Cobertura | null>(null);
   const [email, setEmail] = useState("");
   const [cidade, setCidade] = useState("");
-  const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
-    // A landing precisa abrir mesmo se a API estiver fora: preço e cobertura
-    // são reforço, não o argumento.
-    api.planosPublicos().then(setPlanos).catch(() => setPlanos([]));
-    api.cobertura().then(setCobertura).catch(() => setCobertura(null));
-  }, []);
-
-  async function enviar(evento: FormEvent) {
+  /*
+    Sem rede: o formulario existe para mostrar o desenho do campo, do botao
+    e do estado de confirmacao. Enviar de verdade exigiria o backend, entao
+    ele confirma dizendo o que e — em vez de simular um cadastro que nao
+    aconteceu.
+  */
+  function enviar(evento: FormEvent) {
     evento.preventDefault();
-    setErro(null);
-    setEnviando(true);
-    try {
-      const r = await api.registrarInteresse(email, cidade);
-      setAviso(r.mensagem);
-      setEmail("");
-      setCidade("");
-    } catch (e) {
-      setErro(
-        e instanceof ErroApi ? e.message : "Não foi possível registrar agora. Tente de novo.",
-      );
-    } finally {
-      setEnviando(false);
-    }
+    setAviso(
+      "Vitrine do layout: nada é enviado. No produto, este e-mail entraria na fila " +
+        "de interesse da cidade informada.",
+    );
+    setEmail("");
+    setCidade("");
   }
 
   return (
@@ -83,9 +96,10 @@ export default function Landing() {
             <a href="#como">Como funciona</a>
             <a href="#exclusividade">Exclusividade</a>
             <a href="#precos">Preços</a>
-            <Link to="/entrar" className="btn">
+            {/* Inerte por nao haver login nesta vitrine; o desenho fica. */}
+            <button type="button" className="btn">
               Entrar
-            </Link>
+            </button>
           </nav>
         </div>
       </header>
@@ -119,28 +133,24 @@ export default function Landing() {
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
             />
-            <button type="submit" className="btn primario" disabled={enviando}>
-              {enviando ? "Enviando…" : "Quero saber quando abrir vaga"}
+            <button type="submit" className="btn primario">
+              Quero saber quando abrir vaga
             </button>
           </form>
 
-          {aviso && <p className="alerta info lp-estreito">{aviso}</p>}
-          {erro && <p className="alerta erro lp-estreito">{erro}</p>}
-
-          <p className="lp-nota">
-            Ou <Link to="/criar-conta">crie sua conta</Link> e comece o teste agora — sem
-            cartão.
-          </p>
-
-          {cobertura && cobertura.empresas > 0 && (
-            <p className="lp-prova">
-              <strong>
-                {cobertura.empresas.toLocaleString("pt-BR")}+ empresas
-              </strong>{" "}
-              mapeadas em {cobertura.cidades}{" "}
-              {cobertura.cidades === 1 ? "cidade" : "cidades"}, atualizadas toda semana.
+          {aviso && (
+            <p className="alerta info lp-estreito" role="status">
+              {aviso}
             </p>
           )}
+
+          <p className="lp-nota">Ou crie sua conta e comece o teste agora — sem cartão.</p>
+
+          <p className="lp-prova">
+            <strong>{COBERTURA.empresas.toLocaleString("pt-BR")}+ empresas</strong>{" "}
+            mapeadas em {COBERTURA.cidades}{" "}
+            {COBERTURA.cidades === 1 ? "cidade" : "cidades"}, atualizadas toda semana.
+          </p>
         </div>
       </section>
 
@@ -227,38 +237,34 @@ export default function Landing() {
             trabalhar ao mesmo tempo. Cidades e ramos são ilimitados em todos.
           </p>
 
-          {planos.length === 0 ? (
-            <p className="vazio">Tabela de preços indisponível no momento.</p>
-          ) : (
-            <div className="plans">
-              {planos.map((p, i) => (
-                <article key={p.id} className={i === 1 ? "plan hi" : "plan"}>
-                  <span className="nm">{p.nome}</span>
-                  <span className="pr">
-                    {reais(p.preco_centavos)}
-                    <small>/mês</small>
-                  </span>
-                  <dl>
-                    <div>
-                      <dt>Carteira</dt>
-                      <dd>{p.carteira_max.toLocaleString("pt-BR")}</dd>
-                    </div>
-                    <div>
-                      <dt>Tipos de oferta</dt>
-                      <dd>{p.ofertas_incluidas}</dd>
-                    </div>
-                    <div>
-                      <dt>Cidades</dt>
-                      <dd>ilimitadas</dd>
-                    </div>
-                  </dl>
-                  <Link to="/criar-conta" className="btn primario lp-plano-btn">
-                    Começar teste
-                  </Link>
-                </article>
-              ))}
-            </div>
-          )}
+          <div className="plans">
+            {PLANOS.map((p, i) => (
+              <article key={p.id} className={i === 1 ? "plan hi" : "plan"}>
+                <span className="nm">{p.nome}</span>
+                <span className="pr">
+                  {reais(p.preco_centavos)}
+                  <small>/mês</small>
+                </span>
+                <dl>
+                  <div>
+                    <dt>Carteira</dt>
+                    <dd>{p.carteira_max.toLocaleString("pt-BR")}</dd>
+                  </div>
+                  <div>
+                    <dt>Tipos de oferta</dt>
+                    <dd>{p.ofertas_incluidas}</dd>
+                  </div>
+                  <div>
+                    <dt>Cidades</dt>
+                    <dd>ilimitadas</dd>
+                  </div>
+                </dl>
+                <button type="button" className="btn primario lp-plano-btn">
+                  Começar teste
+                </button>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -270,12 +276,9 @@ export default function Landing() {
             Escolha suas cidades, receba a primeira carteira e veja os contatos antes de
             decidir qualquer coisa.
           </p>
-          <Link to="/criar-conta" className="btn primario lp-cta">
+          <button type="button" className="btn primario lp-cta">
             Criar conta gratuita
-          </Link>
-          <p className="lp-nota">
-            Já tem conta? <Link to="/entrar">Entrar</Link>
-          </p>
+          </button>
         </div>
       </section>
 
