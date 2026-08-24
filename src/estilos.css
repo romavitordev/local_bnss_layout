@@ -1,0 +1,383 @@
+/* ==========================================================================
+   Tema — neutros levemente frios com verde de razão (ledger) como acento.
+   Claro e escuro definidos por token; nenhuma cor vive só dentro do @media.
+   ========================================================================== */
+:root {
+  --papel: #f5f7f8;
+  --superficie: #ffffff;
+  --superficie-2: #edf1f2;
+  --tinta: #14181c;
+  --tinta-2: #39424c;
+  --apagado: #5e6874;
+  --linha: #dde3e7;
+  --acento: #0e5c4a;
+  --acento-forte: #0b4a3c;
+  --acento-suave: #e3efea;
+  --alerta: #8a6110;
+  --alerta-suave: #f8f0dc;
+  --perigo: #8b3a33;
+  --perigo-suave: #f7e9e7;
+  --sombra: 0 1px 2px rgba(20, 24, 28, 0.05), 0 8px 24px -18px rgba(20, 24, 28, 0.28);
+  --raio: 9px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papel: #0f1216;
+    --superficie: #161b21;
+    --superficie-2: #1d242b;
+    --tinta: #e7ebef;
+    --tinta-2: #c3cbd4;
+    --apagado: #97a2ae;
+    --linha: #262e36;
+    --acento: #54c0a3;
+    --acento-forte: #7fd6bd;
+    --acento-suave: #123028;
+    --alerta: #d9a648;
+    --alerta-suave: #2a2416;
+    --perigo: #d98a80;
+    --perigo-suave: #2c1b19;
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -18px rgba(0, 0, 0, 0.7);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 4px; letter-spacing: -0.015em; }
+h2 { font-size: 1.15rem; margin: 0; letter-spacing: -0.01em; }
+h3 { font-size: 1rem; margin: 0; }
+a { color: var(--acento); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
+
+/* -------------------------------------------------------------- estrutura */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topo {
+  background: var(--superficie);
+  border-bottom: 1px solid var(--linha);
+  position: sticky; top: 0; z-index: 10;
+}
+.topo-conteudo {
+  max-width: 1180px; margin: 0 auto; padding: 0 20px;
+  height: 62px; display: flex; align-items: center; gap: 28px;
+}
+.marca { display: flex; flex-direction: column; line-height: 1.15; }
+.marca-nome { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
+.marca-sub {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--apagado);
+}
+.marca-grande { align-items: center; margin-bottom: 18px; }
+.marca-grande .marca-nome { font-size: 1.5rem; }
+
+.menu { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+.menu-link {
+  padding: 7px 13px; border-radius: 7px; text-decoration: none;
+  color: var(--tinta-2); font-size: 14px; font-weight: 500;
+}
+.menu-link:hover { background: var(--superficie-2); color: var(--tinta); }
+.menu-link.ativo { background: var(--acento-suave); color: var(--acento-forte); }
+
+.usuario { display: flex; align-items: center; gap: 12px; }
+.usuario-nome { font-size: 13px; color: var(--apagado); }
+
+.conteudo { max-width: 1180px; width: 100%; margin: 0 auto; padding: 30px 20px 72px; }
+.carregando { padding: 60px; text-align: center; color: var(--apagado); }
+
+.cabecalho-pagina {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.titulo-secao { margin: 34px 0 12px; }
+.ajuda { color: var(--apagado); font-size: 13.5px; margin: 4px 0 0; max-width: 68ch; }
+.vazio {
+  color: var(--apagado); background: var(--superficie); border: 1px dashed var(--linha);
+  border-radius: var(--raio); padding: 26px; text-align: center;
+}
+
+/* ---------------------------------------------------------------- botões */
+.btn {
+  border: 1px solid var(--linha); background: var(--superficie); color: var(--tinta);
+  padding: 9px 16px; border-radius: 7px; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+}
+.btn:hover:not(:disabled) { background: var(--superficie-2); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+.btn.primario:hover:not(:disabled) { background: var(--acento-forte); border-color: var(--acento-forte); }
+.btn.pequeno { padding: 5px 10px; font-size: 12.5px; }
+.btn.sucesso { border-color: var(--acento); color: var(--acento); }
+.btn-texto {
+  background: none; border: 0; color: var(--apagado); cursor: pointer;
+  font-size: 13px; font-family: inherit; padding: 4px;
+}
+.btn-texto:hover { color: var(--tinta); }
+
+/* ---------------------------------------------------------------- alertas */
+.alerta { border-radius: var(--raio); padding: 11px 15px; font-size: 14px; margin: 0 0 16px; }
+.alerta.erro { background: var(--perigo-suave); color: var(--perigo); border: 1px solid var(--perigo); }
+.alerta.info { background: var(--acento-suave); color: var(--acento-forte); border: 1px solid var(--acento); }
+
+/* -------------------------------------------------------------- acesso */
+.tela-acesso { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.cartao-acesso {
+  background: var(--superficie); border: 1px solid var(--linha); border-radius: 12px;
+  box-shadow: var(--sombra); padding: 34px; width: 100%; max-width: 400px;
+  display: flex; flex-direction: column;
+}
+.cartao-acesso h1 { text-align: center; margin-bottom: 18px; }
+.cartao-acesso label {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--apagado); margin: 14px 0 5px;
+}
+.cartao-acesso .btn { margin-top: 22px; }
+.rodape-acesso { text-align: center; font-size: 13.5px; color: var(--apagado); margin: 18px 0 0; }
+
+input {
+  background: var(--papel); border: 1px solid var(--linha); color: var(--tinta);
+  padding: 9px 12px; border-radius: 7px; font-size: 14px; font-family: inherit; width: 100%;
+}
+input:focus { border-color: var(--acento); }
+
+/* ----------------------------------------------------------- indicadores */
+.indicadores {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px; margin-bottom: 12px;
+}
+.indicador {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-radius: var(--raio); padding: 17px;
+}
+.indicador .rotulo {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.09em; color: var(--apagado); margin-bottom: 8px;
+}
+.indicador .valor {
+  display: block; font-size: 1.85rem; font-weight: 700;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.indicador .valor small { font-size: 0.95rem; font-weight: 400; color: var(--apagado); }
+.indicador .nota { display: block; font-size: 12px; color: var(--apagado); margin-top: 6px; }
+
+.barra {
+  height: 6px; background: var(--superficie-2); border-radius: 999px;
+  overflow: hidden; margin-top: 10px;
+}
+.barra-preenchida { height: 100%; background: var(--acento); border-radius: 999px; }
+.barra-preenchida.cheia { background: var(--alerta); }
+
+/* ---------------------------------------------------------------- tabelas */
+.tabela-rolavel {
+  overflow-x: auto; border: 1px solid var(--linha);
+  border-radius: var(--raio); background: var(--superficie);
+}
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { padding: 10px 15px; text-align: left; border-bottom: 1px solid var(--linha); }
+thead th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--apagado); background: var(--superficie-2); white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* -------------------------------------------------------------- etiquetas */
+.etiqueta {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.etiqueta.livre { background: var(--acento-suave); color: var(--acento-forte); }
+.etiqueta.lotada { background: var(--alerta-suave); color: var(--alerta); }
+.st-ativa { background: var(--superficie-2); color: var(--apagado); }
+.st-negociando { background: var(--alerta-suave); color: var(--alerta); }
+.st-contactado { background: var(--superficie-2); color: var(--tinta-2); }
+.st-descartado { background: var(--perigo-suave); color: var(--perigo); }
+.st-fechado { background: var(--acento-suave); color: var(--acento-forte); }
+
+/* ---------------------------------------------------------------- filtros */
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.chip {
+  border: 1px solid var(--linha); background: var(--superficie); color: var(--tinta-2);
+  padding: 6px 13px; border-radius: 999px; font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.chip:hover { background: var(--superficie-2); }
+.chip.ativo { background: var(--acento-suave); border-color: var(--acento); color: var(--acento-forte); }
+.busca { max-width: 240px; margin-left: auto; }
+
+.linha-formulario { display: flex; gap: 10px; max-width: 460px; margin-bottom: 14px; }
+
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; }
+.chip-removivel {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-radius: 999px; padding: 5px 6px 5px 14px; font-size: 13.5px;
+}
+.chip-removivel em { color: var(--apagado); font-style: normal; font-size: 12px; }
+.chip-removivel button {
+  border: 0; background: var(--superficie-2); color: var(--apagado);
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 15px; line-height: 1;
+}
+.chip-removivel button:hover { background: var(--perigo-suave); color: var(--perigo); }
+
+/* ----------------------------------------------------------------- leads */
+.lista-leads { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.lead {
+  background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio);
+  padding: 15px 17px; display: flex; justify-content: space-between;
+  align-items: center; gap: 18px; flex-wrap: wrap;
+}
+.lead-titulo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lead-meta {
+  display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px;
+  color: var(--apagado); margin-top: 5px;
+}
+.lead-meta .telefone { font-weight: 600; font-variant-numeric: tabular-nums; }
+.lead-meta .oferta { color: var(--acento); }
+.lead-meta .expira { margin-left: auto; }
+.lead-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* --------------------------------------------------------------- ofertas */
+.grade-ofertas {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px;
+}
+.cartao-oferta {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-radius: var(--raio); padding: 17px; display: flex;
+  flex-direction: column; gap: 9px; align-items: flex-start;
+}
+.cartao-oferta.ativa { border-color: var(--acento); }
+.cartao-oferta p { margin: 0; font-size: 13px; color: var(--apagado); flex: 1; }
+
+/* --------------------------------------------------------------- pressão */
+.grade-pressao {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;
+}
+.cartao-pressao {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-radius: var(--raio); padding: 18px;
+}
+.cartao-pressao-topo {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.dados-pressao {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 16px 0 0;
+}
+.dados-pressao dt {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--apagado);
+}
+.dados-pressao dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ==========================================================================
+   LANDING PAGE
+   Mesmo sistema de cores do app, mas com respiro e escala maiores: aqui a
+   pagina precisa convencer alguem que chegou de um anuncio, nao apresentar
+   dados para quem ja trabalha nela todo dia.
+   ========================================================================== */
+.lp { background: var(--papel); }
+.lp-largura { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.lp-estreito { max-width: 68ch; }
+.lp-centro { text-align: center; margin-left: auto; margin-right: auto; }
+
+.lp-topo {
+  border-bottom: 1px solid var(--linha);
+  background: var(--superficie);
+  position: sticky; top: 0; z-index: 10;
+}
+.lp-topo-conteudo {
+  height: 66px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px;
+}
+.lp-menu { display: flex; align-items: center; gap: 22px; }
+.lp-menu a { color: var(--tinta-2); text-decoration: none; font-size: 14px; font-weight: 500; }
+.lp-menu a:hover { color: var(--tinta); }
+.lp-menu a.btn { color: var(--tinta); text-decoration: none; }
+
+/* ------------------------------------------------------------------- hero */
+.lp-hero { padding: 76px 0 64px; }
+.lp-eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--acento); margin: 0 0 18px;
+}
+.lp-hero h1 {
+  font-size: clamp(2.1rem, 5.5vw, 3.5rem); line-height: 1.08;
+  letter-spacing: -0.025em; margin: 0 0 20px; max-width: 20ch; text-wrap: balance;
+}
+.lp-hero h1 em { font-style: normal; color: var(--acento); }
+.lp-dek {
+  font-size: 1.13rem; color: var(--tinta-2); max-width: 60ch;
+  margin: 0 0 32px; line-height: 1.55;
+}
+
+.lp-captura {
+  display: flex; gap: 10px; flex-wrap: wrap; max-width: 720px; margin-bottom: 14px;
+}
+.lp-captura input { flex: 1 1 200px; padding: 12px 14px; font-size: 15px; }
+.lp-captura .btn { padding: 12px 22px; white-space: nowrap; }
+
+.lp-nota { font-size: 14px; color: var(--apagado); margin: 14px 0 0; }
+.lp-prova {
+  margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--linha);
+  font-size: 15px; color: var(--tinta-2);
+}
+.lp-prova strong { color: var(--acento); }
+
+/* ----------------------------------------------------------------- secoes */
+.lp-secao { padding: 64px 0; }
+.lp-destaque { background: var(--superficie); border-block: 1px solid var(--linha); }
+.lp-secao h2 {
+  font-size: clamp(1.5rem, 3.2vw, 2.05rem); line-height: 1.2;
+  letter-spacing: -0.02em; margin: 0 0 20px; text-wrap: balance;
+}
+.lp-secao p { font-size: 1.03rem; color: var(--tinta-2); margin: 0 0 16px; }
+.lp-secao p strong { color: var(--tinta); }
+.lp-sub { max-width: 60ch; margin-bottom: 32px !important; }
+
+.lp-tabela { margin: 26px 0 24px; }
+.lp-tabela .bom { color: var(--acento); font-weight: 700; }
+.lp-tabela .ruim { color: var(--perigo); font-weight: 700; }
+
+/* ------------------------------------------------------------------ passos */
+.lp-passos {
+  list-style: none; padding: 0; margin: 36px 0 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 26px;
+}
+.lp-passos li { margin: 0; }
+.lp-numero {
+  display: inline-grid; place-items: center; width: 34px; height: 34px;
+  border-radius: 50%; background: var(--acento-suave); color: var(--acento-forte);
+  font-weight: 700; font-size: 15px; margin-bottom: 14px;
+}
+.lp-passos h3 { font-size: 1.06rem; margin: 0 0 8px; }
+.lp-passos p { font-size: 0.95rem; margin: 0; }
+
+.lp-plano-btn { margin-top: 14px; text-align: center; text-decoration: none; }
+
+/* -------------------------------------------------------------- fechamento */
+.lp-fechamento { padding: 76px 0 84px; }
+.lp-cta { display: inline-block; margin-top: 10px; padding: 13px 30px; font-size: 15px;
+          text-decoration: none; }
+
+.lp-rodape {
+  border-top: 1px solid var(--linha); padding: 26px 0 40px;
+  font-size: 13px; color: var(--apagado);
+}
+.lp-rodape p { max-width: 70ch; margin: 0; }
+
+@media (max-width: 640px) {
+  .lp-menu { gap: 14px; }
+  .lp-menu a:not(.btn) { display: none; }
+  .lp-hero { padding: 48px 0 44px; }
+  .lp-secao { padding: 48px 0; }
+}
