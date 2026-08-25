@@ -41,6 +41,84 @@ export type Conta = {
   email: string;
   papel: string;
   criado_em: string;
+  modelo_mensagem?: string | null;
+};
+
+export type UsoDoPlano = {
+  plano_codigo: string;
+  plano_nome: string;
+  carteira_max: number;
+  carteira_ocupada: number;
+  ofertas_incluidas: number;
+  ofertas_contratadas: number;
+};
+
+export type PontoSerie = { dia: string; valor: number };
+
+export type Series = {
+  dias: number;
+  contas_novas: PontoSerie[];
+  reservas_criadas: PontoSerie[];
+  leads_trabalhados: PontoSerie[];
+  negocios_fechados: PontoSerie[];
+  empresas_descobertas: PontoSerie[];
+  interessados: PontoSerie[];
+};
+
+export type Distribuicao = {
+  planos: { nome: string; contas: number }[];
+  reservas_por_status: { status: string; total: number }[];
+  funil: { interessados: number; converteram: number; taxa: number };
+};
+
+export type SaudeInventario = {
+  empresas: number;
+  reservadas: number;
+  desatualizadas_30d: number;
+  pct_desatualizado: number;
+  visto_mais_antigo: string | null;
+  visto_mais_recente: string | null;
+};
+
+export type Parametro = {
+  chave: string;
+  rotulo: string;
+  descricao: string;
+  tipo: "percentual" | "inteiro";
+  minimo: number;
+  maximo: number;
+  consequencia: string;
+  valor: number;
+  padrao: number;
+  personalizado: boolean;
+  atualizado_em: string | null;
+};
+
+export type EventoAuditoria = {
+  id: number;
+  conta_id: number | null;
+  acao: string;
+  detalhe: string;
+  criado_em: string;
+};
+
+export type InteressadoAdmin = {
+  id: number;
+  email: string;
+  nome: string | null;
+  origem: string;
+  cidade_interesse: string | null;
+  criado_em: string;
+  virou_conta_em: string | null;
+  descadastrado_em: string | null;
+};
+
+export type Exclusao = {
+  id: number;
+  nome: string;
+  email: string;
+  excluir_em: string;
+  vencida: boolean;
 };
 
 export type Empresa = {
@@ -364,7 +442,9 @@ const CONTA: Conta = {
   criado_em: new Date(Date.now() - 214 * 86_400_000).toISOString(),
 };
 
-const PLANO_DA_CONTA = PLANOS[1]; // Solo — 1.500 de carteira
+// Mutável: a tela de plano troca de verdade nesta vitrine, e a carteira do
+// painel muda junto. Um seletor de plano que não muda nada é um print.
+let planoAtual = PLANOS[1]; // Solo — 1.500 de carteira
 
 /* ------------------------------------------------------- estado vivo */
 
@@ -426,7 +506,317 @@ function vivas(): Reserva[] {
 
 /* ------------------------------------------------------------- api */
 
+// =============================================================================
+// ESTADO DO CONSOLE
+// Mesma ideia do resto do arquivo: dados que mudam de verdade enquanto a aba
+// estiver aberta. Um console onde nenhum botão responde não mostra o produto.
+// =============================================================================
+function diasAtras(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Série com forma plausível: cresce, oscila e tem dias vazios. */
+function serie(dias: number, base: number, crescimento: number, semente: number): PontoSerie[] {
+  const rnd = sorteio(semente);
+  return Array.from({ length: dias }, (_, i) => {
+    const tendencia = base + (i / dias) * crescimento;
+    const ruido = rnd() * tendencia * 0.7;
+    const valor = Math.max(0, Math.round(tendencia * 0.5 + ruido));
+    return { dia: diasAtras(dias - 1 - i), valor };
+  });
+}
+
+let interessados: InteressadoAdmin[] = [
+  {
+    id: 1, email: "contato@agenciamarcos.com.br", nome: "Marcos",
+    origem: "landing", cidade_interesse: "Campinas",
+    criado_em: diasAtras(2), virou_conta_em: null, descadastrado_em: null,
+  },
+  {
+    id: 2, email: "ola@estudiolume.com.br", nome: null,
+    origem: "landing", cidade_interesse: "Curitiba",
+    criado_em: diasAtras(6), virou_conta_em: diasAtras(4), descadastrado_em: null,
+  },
+  {
+    id: 3, email: "comercial@webfacil.com.br", nome: "Paula",
+    origem: "campanha-instagram", cidade_interesse: "Sorocaba",
+    criado_em: diasAtras(11), virou_conta_em: null, descadastrado_em: null,
+  },
+  {
+    id: 4, email: "eu@freelancer.dev", nome: null,
+    origem: "landing", cidade_interesse: null,
+    criado_em: diasAtras(19), virou_conta_em: null, descadastrado_em: diasAtras(9),
+  },
+];
+
+const CONTAS_ADMIN: ContaAdmin[] = [
+  {
+    id: 1, nome: CONTA.nome, email: CONTA.email, papel: "admin",
+    criado_em: diasAtras(140), plano: "Solo", status_assinatura: "ativa",
+    carteira_max: 1500, carteira_ocupada: 0, territorios: 3,
+  },
+  {
+    id: 2, nome: "Estúdio Lume", email: "ola@estudiolume.com.br", papel: "usuario",
+    criado_em: diasAtras(4), plano: "Início", status_assinatura: "ativa",
+    carteira_max: 500, carteira_ocupada: 318, territorios: 1,
+  },
+  {
+    id: 3, nome: "Agência Norte", email: "contato@agencianorte.com.br", papel: "usuario",
+    criado_em: diasAtras(27), plano: "Equipe", status_assinatura: "ativa",
+    carteira_max: 4500, carteira_ocupada: 2740, territorios: 6,
+  },
+  {
+    id: 4, nome: "Bruno Freela", email: "bruno@freela.com.br", papel: "usuario",
+    criado_em: diasAtras(9), plano: "Teste", status_assinatura: "teste",
+    carteira_max: 100, carteira_ocupada: 41, territorios: 1,
+  },
+];
+
+const PADROES: Record<string, number> = {
+  r1_piso_disponibilidade: 0.7,
+  r2_teto_concentracao: 0.25,
+  r3_cooldown_mesma_oferta_dias: 180,
+  r3_cooldown_qualquer_oferta_dias: 30,
+  max_ofertas_simultaneas: 2,
+  expiracao_reserva_dias: 45,
+};
+
+const CATALOGO_PARAMETROS: Omit<Parametro, "valor" | "personalizado" | "atualizado_em">[] = [
+  {
+    chave: "r1_piso_disponibilidade", rotulo: "R1 — piso de disponibilidade",
+    descricao: "Fração máxima do inventário de uma cidade que pode estar alocada.",
+    tipo: "percentual", minimo: 0.1, maximo: 0.95, padrao: 0.7,
+    consequencia:
+      "Em 0,95 quase não sobra vaga para quem chegar depois; a cidade fica " +
+      "efetivamente fechada a novos clientes.",
+  },
+  {
+    chave: "r2_teto_concentracao", rotulo: "R2 — teto de concentração",
+    descricao: "Fração máxima do inventário de uma cidade que um único cliente segura.",
+    tipo: "percentual", minimo: 0.05, maximo: 1, padrao: 0.25,
+    consequencia:
+      "Em 1,00 um cliente grande toma a cidade inteira — que é o monopólio " +
+      "que a regra existe para impedir.",
+  },
+  {
+    chave: "r3_cooldown_mesma_oferta_dias", rotulo: "R3 — carência da mesma oferta",
+    descricao: "Dias que uma empresa fica fora de circulação para a mesma proposta.",
+    tipo: "inteiro", minimo: 30, maximo: 730, padrao: 180,
+    consequencia:
+      "Muito baixo, o mesmo negócio recebe a mesma proposta de vários " +
+      "clientes em sequência — é assim que a lista queima.",
+  },
+  {
+    chave: "r3_cooldown_qualquer_oferta_dias", rotulo: "R3 — carência entre ofertas",
+    descricao: "Dias de descanso da empresa entre abordagens de qualquer tipo.",
+    tipo: "inteiro", minimo: 7, maximo: 365, padrao: 30,
+    consequencia:
+      "Perto de zero, o mesmo dono recebe ligações de todas as ofertas na " +
+      "mesma semana.",
+  },
+  {
+    chave: "max_ofertas_simultaneas", rotulo: "Ofertas simultâneas por empresa",
+    descricao: "Quantos tipos de proposta podem estar ativos sobre a mesma empresa.",
+    tipo: "inteiro", minimo: 1, maximo: 4, padrao: 2,
+    consequencia:
+      "Acima de 2 o valor do contato cai sem ganho proporcional: poucas " +
+      "empresas satisfazem quatro filtros ao mesmo tempo.",
+  },
+  {
+    chave: "expiracao_reserva_dias", rotulo: "Expiração da reserva",
+    descricao: "Dias até uma reserva não trabalhada voltar ao pool.",
+    tipo: "inteiro", minimo: 7, maximo: 180, padrao: 45,
+    consequencia:
+      "Muito alto, um plano grande reserva a cidade e nunca liga para " +
+      "ninguém — o acaparamento que R1 e R2 tentam impedir.",
+  },
+];
+
+let ajustados: Record<string, { valor: number; em: string }> = {};
+let eventos: EventoAuditoria[] = [
+  { id: 3, conta_id: 1, acao: "login", detalhe: "", criado_em: new Date().toISOString() },
+  { id: 2, conta_id: 1, acao: "exportacao", detalhe: "xlsx · 128 reserva(s)", criado_em: diasAtras(1) },
+  { id: 1, conta_id: 1, acao: "registro", detalhe: CONTA.email, criado_em: diasAtras(140) },
+];
+let proximoEvento = 4;
+
+function auditar(acao: string, detalhe: string): void {
+  eventos = [
+    { id: proximoEvento++, conta_id: 1, acao, detalhe, criado_em: new Date().toISOString() },
+    ...eventos,
+  ];
+}
+
+function montarParametros(): Parametro[] {
+  return CATALOGO_PARAMETROS.map((d) => {
+    const ajuste = ajustados[d.chave];
+    return {
+      ...d,
+      valor: ajuste ? ajuste.valor : PADROES[d.chave],
+      personalizado: Boolean(ajuste),
+      atualizado_em: ajuste ? ajuste.em : null,
+    };
+  });
+}
+
+
 export const api = {
+  // -------------------------------------------------------------- conta
+  perfil: () => responder(CONTA),
+
+  atualizarPerfil: (dados: { nome?: string; modelo_mensagem?: string }) => {
+    if (dados.nome) CONTA.nome = dados.nome;
+    if (dados.modelo_mensagem !== undefined) {
+      CONTA.modelo_mensagem = dados.modelo_mensagem.trim() || null;
+    }
+    return responder({ ...CONTA });
+  },
+
+  usoDoPlano: () =>
+    responder<UsoDoPlano>({
+      plano_codigo: planoAtual.codigo,
+      plano_nome: planoAtual.nome,
+      carteira_max: planoAtual.carteira_max,
+      carteira_ocupada: vivas().length,
+      ofertas_incluidas: planoAtual.ofertas_incluidas,
+      ofertas_contratadas: contratadas.length,
+    }),
+
+  planosDaConta: () => responder(PLANOS),
+
+  trocarPlano: (plano_codigo: string) => {
+    const alvo = PLANOS.find((p) => p.codigo === plano_codigo);
+    if (!alvo) throw new ErroApi(404, "Plano não encontrado");
+    if (alvo.codigo === planoAtual.codigo) throw new ErroApi(409, "Este já é o seu plano");
+    if (contratadas.length > alvo.ofertas_incluidas) {
+      throw new ErroApi(
+        409,
+        `Você tem ${contratadas.length} tipos de oferta contratados e o plano ` +
+          `${alvo.nome} inclui ${alvo.ofertas_incluidas}. Remova as excedentes antes.`,
+      );
+    }
+    auditar("troca_plano", `${planoAtual.nome} -> ${alvo.nome}`);
+    planoAtual = alvo;
+    return responder({ plano: alvo });
+  },
+
+  removerOferta: (ofertaId: number) => {
+    if (contratadas.length <= 1) {
+      throw new ErroApi(
+        409,
+        "É preciso manter ao menos um tipo de oferta — sem nenhum, a carteira " +
+          "não tem o que receber.",
+      );
+    }
+    contratadas = contratadas.filter((o) => o.id !== ofertaId);
+    return responder<void>(undefined);
+  },
+
+  // --------------------------------------------------------- plataforma
+  series: (dias = 30) =>
+    responder<Series>({
+      dias,
+      contas_novas: serie(dias, 0.4, 1.6, 11),
+      interessados: serie(dias, 1.2, 3.4, 22),
+      reservas_criadas: serie(dias, 18, 44, 33),
+      leads_trabalhados: serie(dias, 12, 30, 44),
+      negocios_fechados: serie(dias, 0.3, 1.4, 55),
+      empresas_descobertas: serie(dias, 24, 60, 66),
+    }),
+
+  distribuicao: () =>
+    responder<Distribuicao>({
+      planos: [
+        { nome: "Teste", contas: 1 },
+        { nome: "Início", contas: 1 },
+        { nome: "Solo", contas: 1 },
+        { nome: "Equipe", contas: 1 },
+      ],
+      reservas_por_status: ["ativa", "negociando", "contactado", "descartado", "fechado"]
+        .map((status) => ({
+          status,
+          total: reservas.filter((r) => r.status === status).length,
+        }))
+        .filter((x) => x.total > 0),
+      funil: {
+        interessados: interessados.length,
+        converteram: interessados.filter((i) => i.virou_conta_em).length,
+        taxa: interessados.length
+          ? Math.round(
+              (interessados.filter((i) => i.virou_conta_em).length / interessados.length) * 1000,
+            ) / 10
+          : 0,
+      },
+    }),
+
+  saudeDoInventario: () => {
+    const desatualizadas = Math.round(EMPRESAS.length * 0.18);
+    return responder<SaudeInventario>({
+      empresas: EMPRESAS.length,
+      reservadas: vivas().length,
+      desatualizadas_30d: desatualizadas,
+      pct_desatualizado: 18,
+      visto_mais_antigo: diasAtras(62),
+      visto_mais_recente: diasAtras(0),
+    });
+  },
+
+  parametros: () => responder(montarParametros()),
+
+  definirParametro: (chave: string, valor: number) => {
+    const definicao = CATALOGO_PARAMETROS.find((d) => d.chave === chave);
+    if (!definicao) throw new ErroApi(404, "Parâmetro desconhecido");
+    if (valor < definicao.minimo || valor > definicao.maximo) {
+      throw new ErroApi(
+        400,
+        `${definicao.rotulo} aceita entre ${definicao.minimo} e ${definicao.maximo}; ` +
+          `recebeu ${valor}.`,
+      );
+    }
+    if (definicao.tipo === "inteiro" && !Number.isInteger(valor)) {
+      throw new ErroApi(400, `${definicao.rotulo} precisa ser um número inteiro.`);
+    }
+    ajustados = { ...ajustados, [chave]: { valor, em: new Date().toISOString() } };
+    auditar("alterar_parametro", `${chave} = ${valor}`);
+    return responder({ chave, valor });
+  },
+
+  restaurarParametro: (chave: string) => {
+    const { [chave]: _fora, ...resto } = ajustados;
+    ajustados = resto;
+    return responder<void>(undefined);
+  },
+
+  auditoria: (limite = 100) => responder(eventos.slice(0, limite)),
+
+  interessados: () => responder(interessados),
+
+  excluirInteressado: (id: number) => {
+    const alvo = interessados.find((i) => i.id === id);
+    interessados = interessados.filter((i) => i.id !== id);
+    if (alvo) auditar("excluir_interessado", `registro ${id} apagado a pedido do titular`);
+    return responder<void>(undefined);
+  },
+
+  /** Na vitrine não há pedidos pendentes: a fila vazia é o estado saudável. */
+  exclusoes: () => responder<Exclusao[]>([]),
+
+  alterarPapel: (contaId: number, papel: string) => {
+    const alvo = CONTAS_ADMIN.find((c) => c.id === contaId);
+    if (!alvo) throw new ErroApi(404, "Conta não encontrada");
+    if (alvo.id === 1 && papel !== "admin") {
+      throw new ErroApi(
+        409,
+        "Você não pode rebaixar a própria conta — ficaria sem acesso ao console.",
+      );
+    }
+    alvo.papel = papel;
+    auditar("alterar_papel", `conta ${alvo.id} (${alvo.email}): -> ${papel}`);
+    return responder({ id: alvo.id, papel });
+  },
+
   // ----------------------------------------------------------- landing
   registrarInteresse: (email: string, cidade_interesse?: string) =>
     responder({
@@ -467,9 +857,9 @@ export const api = {
 
   uso: () =>
     responder<Uso>({
-      carteira_max: PLANO_DA_CONTA.carteira_max,
+      carteira_max: planoAtual.carteira_max,
       carteira_ocupada: vivas().length,
-      carteira_livre: PLANO_DA_CONTA.carteira_max - vivas().length,
+      carteira_livre: planoAtual.carteira_max - vivas().length,
       em_negociacao: reservas.filter((r) => r.status === "negociando").length,
       trabalhadas_no_mes: reservas.filter(
         (r) => r.status !== "ativa" && r.status !== "negociando",
@@ -625,46 +1015,16 @@ export const api = {
       mrr_centavos: 486_300,
     }),
 
-  adminContas: (q?: string) => {
-    const base: ContaAdmin[] = [
-      {
-        id: 1, nome: "Conta de demonstração", email: "demo@leads.com.br", papel: "admin",
-        criado_em: CONTA.criado_em, plano: "Solo", status_assinatura: "ativa",
-        carteira_max: 1500, carteira_ocupada: vivas().length, territorios: territorios.length,
-      },
-      {
-        id: 2, nome: "Agência Ponto Digital", email: "contato@pontodigital.com.br", papel: "cliente",
-        criado_em: new Date(Date.now() - 96 * 86_400_000).toISOString(),
-        plano: "Equipe", status_assinatura: "ativa",
-        carteira_max: 4500, carteira_ocupada: 3120, territorios: 7,
-      },
-      {
-        id: 3, nome: "Studio Meridiano", email: "oi@meridiano.dev", papel: "cliente",
-        criado_em: new Date(Date.now() - 61 * 86_400_000).toISOString(),
-        plano: "Solo", status_assinatura: "ativa",
-        carteira_max: 1500, carteira_ocupada: 890, territorios: 3,
-      },
-      {
-        id: 4, nome: "Rede Sertão Web", email: "comercial@sertaoweb.com.br", papel: "cliente",
-        criado_em: new Date(Date.now() - 28 * 86_400_000).toISOString(),
-        plano: "Início", status_assinatura: "inadimplente",
-        carteira_max: 500, carteira_ocupada: 402, territorios: 2,
-      },
-      {
-        id: 5, nome: "Bruno Tavares", email: "bruno@freela.com.br", papel: "cliente",
-        criado_em: new Date(Date.now() - 9 * 86_400_000).toISOString(),
-        plano: null, status_assinatura: null,
-        carteira_max: 100, carteira_ocupada: 41, territorios: 1,
-      },
-    ];
-    if (!q) return responder(base);
-    const busca = q.toLowerCase();
-    return responder(
-      base.filter(
-        (c) => c.nome.toLowerCase().includes(busca) || c.email.toLowerCase().includes(busca),
-      ),
-    );
-  },
+  adminContas: (q?: string) =>
+    responder(
+      q
+        ? CONTAS_ADMIN.filter(
+            (c) =>
+              c.nome.toLowerCase().includes(q.toLowerCase()) ||
+              c.email.toLowerCase().includes(q.toLowerCase()),
+          )
+        : CONTAS_ADMIN,
+    ),
 
   adminPressao: () => {
     const aleatorio = sorteio(9081);
@@ -696,10 +1056,10 @@ export const api = {
   contratarOferta: (ofertaId: number) => {
     const oferta = OFERTAS.find((o) => o.id === ofertaId);
     if (!oferta) throw new ErroApi(404, "Oferta desconhecida.");
-    if (contratadas.length >= PLANO_DA_CONTA.ofertas_incluidas) {
+    if (contratadas.length >= planoAtual.ofertas_incluidas) {
       throw new ErroApi(
         403,
-        `O plano ${PLANO_DA_CONTA.nome} inclui ${PLANO_DA_CONTA.ofertas_incluidas} tipo de oferta.`,
+        `O plano ${planoAtual.nome} inclui ${planoAtual.ofertas_incluidas} tipo de oferta.`,
       );
     }
     if (!contratadas.some((o) => o.id === ofertaId)) contratadas = [...contratadas, oferta];

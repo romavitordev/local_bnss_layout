@@ -6,9 +6,9 @@ publicada no GitHub Pages. React + TypeScript + Vite, com React Router.
 **No ar:** https://romavitordev.github.io/local_bnss_layout/
 
 > Todas as telas estão aqui — landing, login, cadastro, painel, carteira,
-> territórios, pressão e o administrativo — mas rodando sobre dados de
-> exemplo que vivem no navegador. O login aceita qualquer credencial e
-> nada é gravado.
+> territórios, pressão, perfil, plano e as cinco do console interno — mas
+> rodando sobre dados de exemplo que vivem no navegador. O login aceita
+> qualquer credencial e nada é gravado.
 >
 > O produto de verdade tem backend em FastAPI: autenticação, motor de
 > alocação, cooldown, exportação e o crawl que alimenta o inventário. Ele
@@ -27,6 +27,32 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## Dois painéis atrás do mesmo login
+
+O papel da conta decide para onde o login leva, e são produtos diferentes:
+
+- **`/painel` — cliente.** Onde o trabalho acontece: alocar leads, abrir o
+  WhatsApp do contato, registrar resultado, gerir territórios, ver a
+  pressão do inventário, escolher plano e ofertas.
+- **`/admin` — console.** Onde a plataforma é operada: visão geral com
+  séries, contas, saúde do inventário, os parâmetros do motor (R1–R6) e a
+  lista de interessados.
+
+O console mostra **quantos, nunca quem**. Nenhuma tela sua abre a carteira
+de trabalho de um cliente, e no produto não existe rota que a entregue —
+o console não precisa dela para operar, e conceder esse acesso criaria uma
+superfície a justificar em cada auditoria.
+
+A conta de exemplo da vitrine é `admin` justamente para que os dois lados
+fiquem visitáveis. No produto, um cliente comum nunca chega ao console:
+além do desvio no roteador, o papel é conferido no servidor a cada
+requisição — o roteador aqui é conforto, não segurança.
+
+Os parâmetros do motor são editáveis na vitrine e o valor persiste
+enquanto a aba estiver aberta, com a mesma validação de faixa do produto.
+O que não acontece é a consequência: no original, mexer em R2 muda a
+próxima alocação de verdade.
 
 ## Como a vitrine difere do produto
 
@@ -52,6 +78,9 @@ mostra um print.
 | login | aceita qualquer e-mail e senha; a conta demo é `admin`, para o painel interno ficar visível |
 | exportar CSV | montado no navegador a partir da carteira |
 | exportar XLSX | recusado com explicação — o arquivo real é montado pelo backend |
+| WhatsApp | o link `wa.me` é real e abre mesmo; o número é de exemplo |
+| troca de plano | acontece de verdade e a carteira do painel muda junto |
+| parâmetros do motor | editáveis e validados, mas sem alocação para afetar |
 | `base` | `/local_bnss_layout/` — o Pages de projeto serve em subcaminho |
 | `basename` do router | vem do `BASE_URL`, senão a navegação cai fora do subcaminho |
 | proxy `/api` | removido; não há backend para onde apontar |
@@ -61,16 +90,18 @@ O `404.html` existe porque o GitHub Pages serve arquivo estático: sem ele,
 abrir `/local_bnss_layout/carteira` direto na barra de endereço devolve a
 página de erro do Pages em vez da aplicação.
 
-## Correções que valem voltar pro produto
+## Correções que nasceram aqui
 
-Duas coisas encontradas aqui são defeitos do original, não da cópia:
+Duas coisas encontradas nesta vitrine eram defeitos do original, não da
+cópia. **As duas já voltaram para o produto** — ficam registradas porque
+mostram para que serve manter a vitrine viva em vez de tirar prints:
 
-- **Os cartões de preço não têm CSS.** `.plans`, `.plan`, `.hi`, `.nm` e
-  `.pr` não existem na folha de estilo — conferido nos dois repositórios,
-  onde o arquivo é idêntico. Sempre que a API devolve planos, a seção
-  renderiza como texto empilhado. O estilo foi escrito aqui.
-- **A tabela da landing rolava sem precisar.** Ela herdava
-  `min-width: 560px` e `white-space: nowrap`, regras que existem para as
-  tabelas largas do aplicativo. Numa tabela de três colunas curtas dentro
-  de um container de 68ch, isso escondia a coluna da direita — que é
-  justamente a conclusão do argumento.
+- **Os cartões de preço não tinham CSS.** `.plans`, `.plan`, `.hi`, `.nm` e
+  `.pr` não existiam na folha de estilo, então a seção de planos renderizava
+  como texto empilhado sempre que a API respondia. O estilo foi escrito aqui
+  e hoje está nos dois repositórios.
+- **A tabela da landing rolava sem precisar.** Herdava `min-width: 560px` e
+  `white-space: nowrap`, regras que existem para as tabelas largas do
+  aplicativo; numa tabela de três colunas curtas isso escondia a coluna da
+  direita — justamente a conclusão do argumento. A landing foi depois
+  reescrita com folha própria (`landing.css`), sem herdar nada do app.

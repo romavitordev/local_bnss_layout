@@ -1,16 +1,23 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import Layout from "./componentes/Layout";
 import AvisoDemo from "./componentes/AvisoDemo";
+import Layout from "./componentes/Layout";
+import LayoutAdmin from "./componentes/LayoutAdmin";
 import { ProvedorAuth, useAuth } from "./contexto/Auth";
-import Admin from "./rotas/Admin";
 import Carteira from "./rotas/Carteira";
 import CriarConta from "./rotas/CriarConta";
 import Entrar from "./rotas/Entrar";
 import Landing from "./rotas/Landing";
 import NaoEncontrada from "./rotas/NaoEncontrada";
 import Painel from "./rotas/Painel";
+import Perfil from "./rotas/Perfil";
+import Plano from "./rotas/Plano";
 import Pressao from "./rotas/Pressao";
 import Territorios from "./rotas/Territorios";
+import Contas from "./rotas/admin/Contas";
+import Interessados from "./rotas/admin/Interessados";
+import Inventario from "./rotas/admin/Inventario";
+import Plataforma from "./rotas/admin/Plataforma";
+import VisaoGeral from "./rotas/admin/VisaoGeral";
 
 /** Só deixa passar quem está autenticado; o resto vai para o login. */
 function RotaProtegida() {
@@ -20,17 +27,28 @@ function RotaProtegida() {
   return <Outlet />;
 }
 
-/** Quem já entrou não precisa ver login nem cadastro. */
+/**
+ * Quem já entrou não precisa ver login nem cadastro.
+ *
+ * O destino depende do papel: admin cai no console da plataforma, cliente cai
+ * no painel de trabalho — são dois produtos atrás do mesmo login.
+ *
+ * Na vitrine a conta de exemplo é admin, para que os dois lados fiquem
+ * visitáveis. No produto, um cliente comum nunca chega ao console.
+ */
 function RotaPublica() {
   const { conta, carregando } = useAuth();
   if (carregando) return <div className="carregando">Carregando…</div>;
-  if (conta) return <Navigate to="/painel" replace />;
+  if (conta) {
+    return <Navigate to={conta.papel === "admin" ? "/admin" : "/painel"} replace />;
+  }
   return <Outlet />;
 }
 
-/** O papel tambem e verificado no servidor a cada requisicao; aqui e so UX. */
+/** O papel também é verificado no servidor a cada requisição; aqui é só UX. */
 function RotaDeAdmin() {
-  const { conta } = useAuth();
+  const { conta, carregando } = useAuth();
+  if (carregando) return <div className="carregando">Carregando…</div>;
   if (conta?.papel !== "admin") return <Navigate to="/painel" replace />;
   return <Outlet />;
 }
@@ -43,8 +61,8 @@ export default function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ProvedorAuth>
         <Routes>
-          {/* A landing e aberta a todos, inclusive a quem ja esta logado:
-              e a pagina institucional do produto, nao um passo do cadastro. */}
+          {/* A landing é aberta a todos, inclusive a quem já está logado:
+              é a página institucional do produto, não um passo do cadastro. */}
           <Route path="/" element={<Landing />} />
 
           <Route element={<RotaPublica />}>
@@ -53,13 +71,24 @@ export default function App() {
           </Route>
 
           <Route element={<RotaProtegida />}>
+            {/* Painel do cliente: comprar, ver e trabalhar os contatos. */}
             <Route element={<Layout />}>
               <Route path="/painel" element={<Painel />} />
               <Route path="/carteira" element={<Carteira />} />
               <Route path="/territorios" element={<Territorios />} />
               <Route path="/pressao" element={<Pressao />} />
-              <Route element={<RotaDeAdmin />}>
-                <Route path="/admin" element={<Admin />} />
+              <Route path="/perfil" element={<Perfil />} />
+              <Route path="/plano" element={<Plano />} />
+            </Route>
+
+            {/* Console da plataforma: operar o produto, não usá-lo. */}
+            <Route element={<RotaDeAdmin />}>
+              <Route element={<LayoutAdmin />}>
+                <Route path="/admin" element={<VisaoGeral />} />
+                <Route path="/admin/contas" element={<Contas />} />
+                <Route path="/admin/inventario" element={<Inventario />} />
+                <Route path="/admin/plataforma" element={<Plataforma />} />
+                <Route path="/admin/interessados" element={<Interessados />} />
               </Route>
             </Route>
           </Route>

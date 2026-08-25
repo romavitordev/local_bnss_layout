@@ -1,0 +1,261 @@
+/* ==========================================================================
+   LANDING — sistema de cor herdado do portfólio (E:/layout_portfoliorb).
+
+   A cor carrega significado, não é decoração: violeta = ideia, ciano = o
+   sistema funcionando, lima = resultado. O fundo é quase-preto com desvio
+   violeta, não cinza neutro.
+
+   Contrastes sobre #0B0A12, medidos e não estimados:
+     luz     #ECEAF5 → 17,8:1   qualquer tamanho
+     bruma   #9490AB →  6,3:1   texto de apoio
+     lima    #A6FF4D → 15,1:1   qualquer tamanho
+     ciano   #00D4C8 → 10,2:1   qualquer tamanho
+     violeta #6D4AFF →  3,1:1   SÓ preenchimento e texto grande
+
+   O escopo em `.lp` isola tudo: o app continua no tema claro/escuro próprio.
+   ========================================================================== */
+.lp {
+  --abismo: #0b0a12;
+  --nevoa: #14121e;
+  --linha-lp: #221f32;
+  --luz: #eceaf5;
+  --bruma: #9490ab;
+  --violeta: #6d4aff;
+  --ciano: #00d4c8;
+  --lima: #a6ff4d;
+  --elev-1: 0 1px 0 0 rgba(236, 234, 245, 0.05) inset,
+            0 8px 24px -16px rgba(0, 0, 0, 0.8);
+  --elev-2: 0 1px 0 0 rgba(236, 234, 245, 0.06) inset,
+            0 18px 50px -28px rgba(0, 0, 0, 0.9);
+  --saida: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Remapeia os tokens do app para a paleta da landing. Componentes
+     compartilhados (.plan, .alerta, .btn, tabela) entram aqui e precisam
+     pegar as cores certas — sem isto, herdariam o tema do painel e a landing
+     ficaria remendada. */
+  --papel: var(--abismo);
+  --superficie: var(--nevoa);
+  --superficie-2: var(--linha-lp);
+  --linha: var(--linha-lp);
+  --linha-forte: #2e2a42;
+  --tinta: var(--luz);
+  --tinta-2: #c6c2d8;
+  --apagado: var(--bruma);
+  --acento: var(--ciano);
+  --acento-suave: rgba(0, 212, 200, 0.1);
+
+  background: var(--abismo);
+  color: var(--luz);
+  font-family: "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+}
+.lp ::selection { background: var(--violeta); color: var(--luz); }
+.lp :focus-visible { outline: 2px solid var(--ciano); outline-offset: 3px; }
+.lp section { scroll-margin-top: 84px; }
+
+.lp-largura { max-width: 72rem; margin: 0 auto; padding: 0 24px; }
+.lp-estreito { max-width: 62ch; }
+.lp-centro { text-align: center; margin-inline: auto; }
+
+/* ------------------------------------------------------------------ navbar */
+/* Transparente sobre o hero e sólida ao rolar: em cima ela sai da frente da
+   mensagem; depois ganha fundo para o texto da página não competir com ela. */
+.lp-topo {
+  position: fixed; inset: 0 0 auto; z-index: 50;
+  background: transparent; border-bottom: 1px solid transparent;
+  transition: background 0.35s var(--saida), border-color 0.35s var(--saida),
+              backdrop-filter 0.35s var(--saida);
+}
+.lp-topo.rolou {
+  background: rgba(11, 10, 18, 0.82);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: var(--linha-lp);
+}
+.lp-topo-conteudo {
+  height: 72px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px;
+}
+.lp-topo .marca-nome { color: var(--luz); font-size: 1.1rem; }
+.lp-topo .marca-sub { color: var(--bruma); }
+
+.lp-menu { display: flex; align-items: center; gap: 26px; }
+.lp-menu a { color: var(--bruma); text-decoration: none; font-size: 14px; font-weight: 500; }
+.lp-menu a:hover { color: var(--luz); }
+.lp-entrar {
+  border: 1px solid var(--linha-lp); border-radius: 8px; padding: 8px 16px;
+  color: var(--luz) !important; background: var(--nevoa);
+}
+.lp-entrar:hover { border-color: var(--ciano); }
+
+/* -------------------------------------------------------------------- hero */
+.lp-hero { padding: 168px 0 96px; position: relative; overflow: hidden; }
+/* Halo violeta atrás do título: na escala de cor, violeta é "a ideia". */
+.lp-hero::before {
+  content: ""; position: absolute; top: -280px; left: 50%;
+  width: 900px; height: 620px; transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(109, 74, 255, 0.22), transparent 68%);
+  pointer-events: none;
+}
+.lp-hero > * { position: relative; }
+
+.lp-eyebrow {
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ciano);
+  margin: 0 0 22px;
+}
+.lp-hero h1 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: clamp(2.6rem, 6.4vw, 4.6rem); line-height: 1.02;
+  letter-spacing: -0.02em; margin: 0 0 24px; max-width: 17ch;
+  color: var(--luz); text-wrap: balance;
+}
+.lp-hero h1 em { font-style: italic; color: var(--lima); }
+.lp-dek {
+  font-size: 1.16rem; color: var(--bruma); max-width: 58ch;
+  margin: 0 0 36px; line-height: 1.6;
+}
+
+.lp-captura { display: flex; gap: 10px; flex-wrap: wrap; max-width: 660px; }
+.lp-captura input {
+  flex: 1 1 190px; background: var(--nevoa); border: 1px solid var(--linha-lp);
+  color: var(--luz); padding: 13px 15px; border-radius: 9px; font-size: 15px;
+}
+.lp-captura input::placeholder { color: #6b6784; }
+.lp-captura input:focus { border-color: var(--ciano); }
+.lp-captura .btn {
+  background: var(--violeta); border: 1px solid var(--violeta); color: #fff;
+  padding: 13px 24px; border-radius: 9px; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 14px 40px -12px rgba(109, 74, 255, 0.5);
+}
+.lp-captura .btn:hover:not(:disabled) { background: #5c3aeb; border-color: #5c3aeb; }
+
+.lp .alerta { border-radius: 9px; }
+.lp .alerta.info {
+  background: rgba(0, 212, 200, 0.1); border-color: var(--ciano); color: var(--ciano);
+}
+.lp .alerta.erro {
+  background: rgba(255, 92, 92, 0.1); border-color: #ff5c5c; color: #ff9b9b;
+}
+
+.lp-nota { font-size: 14px; color: var(--bruma); margin: 18px 0 0; }
+.lp-nota a, .lp-secao a { color: var(--ciano); }
+.lp-prova {
+  margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--linha-lp);
+  font-size: 15px; color: var(--bruma);
+}
+.lp-prova strong { color: var(--lima); font-weight: 600; }
+
+/* ------------------------------------------------------------------ seções */
+.lp-secao { padding: 88px 0; }
+.lp-destaque { background: var(--nevoa); border-block: 1px solid var(--linha-lp); }
+.lp-secao h2 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.14;
+  letter-spacing: -0.015em; margin: 0 0 22px; color: var(--luz); text-wrap: balance;
+}
+.lp-secao p { font-size: 1.05rem; color: var(--bruma); margin: 0 0 18px; line-height: 1.65; }
+.lp-secao p strong { color: var(--luz); font-weight: 600; }
+.lp-secao em { color: var(--luz); font-style: italic; }
+.lp-sub { max-width: 58ch; margin-bottom: 40px !important; }
+
+/* ------------------------------------------------------------------ tabela */
+.lp-tabela {
+  margin: 30px 0 26px; border: 1px solid var(--linha-lp); border-radius: 12px;
+  background: var(--abismo); box-shadow: var(--elev-1); overflow-x: auto;
+}
+.lp-tabela table { min-width: 420px; }
+.lp-tabela th {
+  background: transparent; color: var(--bruma); border-bottom: 1px solid var(--linha-lp);
+  font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.1em;
+}
+.lp-tabela td { border-bottom: 1px solid var(--linha-lp); color: var(--luz); padding: 14px 16px; }
+.lp-tabela tbody tr:last-child td { border-bottom: 0; }
+.lp-tabela .bom { color: var(--lima); font-weight: 700; }
+.lp-tabela .ruim { color: #ff6b6b; font-weight: 700; }
+
+/* ------------------------------------------------------------------ passos */
+.lp-passos {
+  list-style: none; padding: 0; margin: 48px 0 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 28px;
+}
+.lp-passos li {
+  margin: 0; background: var(--abismo); border: 1px solid var(--linha-lp);
+  border-radius: 14px; padding: 26px 24px; box-shadow: var(--elev-1);
+}
+/* Os passos percorrem a escala: ideia → sistema → resultado. */
+.lp-passos li:nth-child(1) .lp-numero { color: var(--violeta); border-color: var(--violeta); }
+.lp-passos li:nth-child(2) .lp-numero { color: var(--ciano); border-color: var(--ciano); }
+.lp-passos li:nth-child(3) .lp-numero { color: var(--lima); border-color: var(--lima); }
+.lp-numero {
+  display: inline-grid; place-items: center; width: 36px; height: 36px;
+  border-radius: 50%; border: 1px solid; font-family: "IBM Plex Mono", monospace;
+  font-weight: 500; font-size: 14px; margin-bottom: 18px;
+}
+.lp-passos h3 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: 1.3rem; margin: 0 0 10px; color: var(--luz);
+}
+.lp-passos p { font-size: 0.96rem; margin: 0; }
+
+/* ------------------------------------------------------------------ planos */
+.lp .plans { margin-top: 44px; }
+.lp .plan {
+  background: var(--abismo); border: 1px solid var(--linha-lp);
+  border-radius: 14px; box-shadow: var(--elev-1);
+}
+.lp .plan.hi {
+  border-color: var(--violeta);
+  box-shadow: var(--elev-2), 0 14px 40px -18px rgba(109, 74, 255, 0.45);
+}
+.lp .plan .nm { color: var(--bruma); font-family: "IBM Plex Mono", monospace; }
+.lp .plan .pr { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; color: var(--luz); }
+.lp .plan .pr small { color: var(--bruma); }
+.lp .plan dl { border-top-color: var(--linha-lp); }
+.lp .plan dt { color: var(--bruma); }
+.lp .plan dd { color: var(--luz); }
+.lp-plano-btn {
+  margin-top: 18px; text-align: center; text-decoration: none;
+  background: transparent; border: 1px solid var(--linha-lp); color: var(--luz);
+}
+.lp-plano-btn:hover { border-color: var(--ciano); background: rgba(0, 212, 200, 0.08); }
+.lp .plan.hi .lp-plano-btn { background: var(--violeta); border-color: var(--violeta); color: #fff; }
+
+/* -------------------------------------------------------------- fechamento */
+.lp-fechamento { padding: 96px 0 104px; }
+.lp-cta {
+  display: inline-block; margin-top: 14px; padding: 15px 34px; font-size: 15px;
+  text-decoration: none; background: var(--lima); border: 1px solid var(--lima);
+  color: #0b0a12; font-weight: 600; border-radius: 10px;
+  box-shadow: 0 14px 40px -14px rgba(166, 255, 77, 0.4);
+}
+.lp-cta:hover { background: #b6ff6b; border-color: #b6ff6b; }
+
+/* ------------------------------------------------------------------ rodapé */
+.lp-rodape { border-top: 1px solid var(--linha-lp); background: var(--nevoa); padding: 56px 0 40px; }
+.lp-rodape-grade { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 40px 28px; }
+.lp-rodape h4 {
+  font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--bruma); margin: 0 0 14px;
+}
+.lp-rodape ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 9px; }
+.lp-rodape a { color: var(--bruma); text-decoration: none; font-size: 14px; }
+.lp-rodape a:hover { color: var(--luz); }
+.lp-rodape-sobre { font-size: 14px; color: var(--bruma); line-height: 1.6; margin: 12px 0 0; max-width: 34ch; }
+.lp-rodape-fim {
+  margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--linha-lp);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  font-size: 13px; color: #6b6784;
+}
+
+@media (max-width: 860px) {
+  .lp-rodape-grade { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .lp-menu a:not(.lp-entrar) { display: none; }
+  .lp-hero { padding: 128px 0 64px; }
+  .lp-secao { padding: 60px 0; }
+  .lp-rodape-grade { grid-template-columns: 1fr; gap: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-topo { transition: none; }
+}

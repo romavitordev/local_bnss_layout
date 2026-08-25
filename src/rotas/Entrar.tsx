@@ -5,10 +5,8 @@ import { useAuth } from "../contexto/Auth";
 
 export default function Entrar() {
   const { entrar } = useAuth();
-  // Ja preenchido: nesta vitrine qualquer credencial entra, e um formulario
-  // vazio deixaria o visitante adivinhando o que digitar pra ver o layout.
-  const [email, setEmail] = useState("demo@leads.com.br");
-  const [senha, setSenha] = useState("demo12345");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -63,9 +61,6 @@ export default function Entrar() {
 
         <p className="rodape-acesso">
           Ainda não tem conta? <Link to="/criar-conta">Criar conta</Link>
-        </p>
-        <p className="rodape-acesso">
-          Vitrine do layout: qualquer e-mail e senha entram.
         </p>
       </form>
     </div>

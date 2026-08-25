@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api, ErroApi, type Cobertura, type Plano } from "../api/cliente";
+import "../landing.css";
 
 function reais(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", {
@@ -45,6 +46,20 @@ export default function Landing() {
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // A navbar é transparente sobre o hero e ganha fundo ao rolar.
+  //
+  // Listener de scroll passivo, não IntersectionObserver: o IO depende do
+  // compositor e não dispara em ambientes onde a página não pinta quadros
+  // (painel oculto, teste headless). O custo aqui é uma comparação numérica
+  // por evento, que é irrelevante — e o comportamento é verificável.
+  const [rolou, setRolou] = useState(false);
+
+  useEffect(() => {
+    const aoRolar = () => setRolou(window.scrollY > 24);
+    aoRolar();
+    window.addEventListener("scroll", aoRolar, { passive: true });
+    return () => window.removeEventListener("scroll", aoRolar);
+  }, []);
 
   useEffect(() => {
     // A landing precisa abrir mesmo se a API estiver fora: preço e cobertura
@@ -73,7 +88,7 @@ export default function Landing() {
 
   return (
     <div className="lp">
-      <header className="lp-topo">
+      <header className={rolou ? "lp-topo rolou" : "lp-topo"}>
         <div className="lp-largura lp-topo-conteudo">
           <div className="marca">
             <span className="marca-nome">Leads</span>
@@ -83,7 +98,7 @@ export default function Landing() {
             <a href="#como">Como funciona</a>
             <a href="#exclusividade">Exclusividade</a>
             <a href="#precos">Preços</a>
-            <Link to="/entrar" className="btn">
+            <Link to="/entrar" className="lp-entrar">
               Entrar
             </Link>
           </nav>
@@ -281,10 +296,54 @@ export default function Landing() {
 
       <footer className="lp-rodape">
         <div className="lp-largura">
-          <p>
-            Os contatos vêm de perfis públicos de empresas. Tratamos os dados conforme a
-            LGPD e removemos qualquer registro a pedido do titular.
-          </p>
+          <div className="lp-rodape-grade">
+            <div>
+              <div className="marca">
+                <span className="marca-nome">Leads</span>
+                <span className="marca-sub">carteira de reservas</span>
+              </div>
+              <p className="lp-rodape-sobre">
+                Empresas brasileiras com problemas de presença digital, reservadas com
+                exclusividade para quem vende a solução.
+              </p>
+            </div>
+
+            <div>
+              <h4>Produto</h4>
+              <ul>
+                <li><a href="#como">Como funciona</a></li>
+                <li><a href="#exclusividade">Exclusividade</a></li>
+                <li><a href="#precos">Preços</a></li>
+                <li><Link to="/criar-conta">Criar conta</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4>Conta</h4>
+              <ul>
+                <li><Link to="/entrar">Entrar</Link></li>
+                <li><Link to="/painel">Painel</Link></li>
+                <li><Link to="/plano">Planos</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4>Legal</h4>
+              <ul>
+                <li><a href="mailto:contato@leads.com.br">Falar com a gente</a></li>
+                <li><a href="mailto:privacidade@leads.com.br">Excluir meus dados</a></li>
+                <li><a href="mailto:contato@leads.com.br">Termos e privacidade</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="lp-rodape-fim">
+            <span>© {new Date().getFullYear()} Leads. Todos os direitos reservados.</span>
+            <span>
+              Os contatos vêm de perfis públicos de empresas. Tratamos os dados conforme
+              a LGPD e removemos qualquer registro a pedido do titular.
+            </span>
+          </div>
         </div>
       </footer>
     </div>

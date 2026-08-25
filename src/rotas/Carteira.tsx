@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ErroApi, type Reserva } from "../api/cliente";
 import { telefoneSeguro, urlSegura } from "../api/url";
+import { linkWhatsapp } from "../api/whatsapp";
 
 const RESULTADOS = [
   { valor: "negociando", rotulo: "Negociando", ajuda: "mantém o lead com você" },
@@ -31,6 +32,8 @@ export default function Carteira() {
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [ocupada, setOcupada] = useState<number | null>(null);
+  // O modelo vem do perfil da conta; sem ele, o utilitario usa o padrao.
+  const [modelo, setModelo] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -47,6 +50,12 @@ export default function Carteira() {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    api.perfil()
+      .then((c) => setModelo(c.modelo_mensagem ?? null))
+      .catch(() => setModelo(null));
+  }, []);
 
   const [baixando, setBaixando] = useState(false);
 
@@ -141,6 +150,22 @@ export default function Carteira() {
                     ) : (
                       <span className="telefone">{r.empresa.telefone_exibicao}</span>
                     );
+                  })()}
+                  {(() => {
+                    // Abre a conversa com a mensagem ja escrita. O wa.me
+                    // decide sozinho entre app e web conforme o dispositivo.
+                    const zap = linkWhatsapp(r.empresa, modelo);
+                    return zap ? (
+                      <a
+                        href={zap}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="zap"
+                        title="Abrir conversa no WhatsApp com a mensagem pronta"
+                      >
+                        WhatsApp
+                      </a>
+                    ) : null;
                   })()}
                   <span>
                     {r.empresa.cidade}/{r.empresa.uf}

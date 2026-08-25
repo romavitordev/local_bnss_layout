@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   api, ErroApi, type ContaAdmin, type Metricas, type PressaoAdmin,
-} from "../api/cliente";
+} from "../../api/cliente";
 
 function reais(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", {
@@ -11,7 +11,7 @@ function reais(centavos: number): string {
   });
 }
 
-export default function Admin() {
+export default function Inventario() {
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [contas, setContas] = useState<ContaAdmin[]>([]);
   const [pressao, setPressao] = useState<PressaoAdmin[]>([]);
@@ -42,10 +42,10 @@ export default function Admin() {
     <section>
       <header className="cabecalho-pagina">
         <div>
-          <h1>Painel interno</h1>
+          <h1>Inventário</h1>
           <p className="ajuda">
-            Visão do sistema inteiro. É o único lugar onde os números absolutos do
-            inventário aparecem — fora daqui, o cliente vê apenas percentual.
+            Ocupação por cidade, com os números absolutos. É o único lugar onde eles
+            aparecem — para o cliente sai só o percentual.
           </p>
         </div>
       </header>
