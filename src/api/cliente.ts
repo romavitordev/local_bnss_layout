@@ -17,12 +17,10 @@
  * produto — mostra um print.
  */
 
-const CHAVE_ACESSO = "leads.access";
-const CHAVE_REFRESH = "leads.refresh";
 
 export type Tokens = {
   access_token: string;
-  refresh_token: string;
+  csrf_token: string;
   expira_em_minutos: number;
 };
 
@@ -42,6 +40,7 @@ export type Conta = {
   papel: string;
   criado_em: string;
   modelo_mensagem?: string | null;
+  email_verificado: boolean;
 };
 
 export type UsoDoPlano = {
@@ -225,28 +224,160 @@ export type PressaoAdmin = {
 
 export type Cobertura = { empresas: number; cidades: number };
 
+// -----------------------------------------------------------------------------
+// COBRANÇA
+// -----------------------------------------------------------------------------
+export type LinhaOrcamento = { descricao: string; valor_centavos: number };
+
+/**
+ * O orçamento vem PRONTO do servidor, inclusive as frases de consequência.
+ * Nada aqui é calculado no navegador — preço calculado no cliente é preço que
+ * o cliente pode editar antes de mandar de volta.
+ */
+export type Orcamento = {
+  tipo: "plano" | "oferta";
+  referencia: string;
+  titulo: string;
+  linhas: LinhaOrcamento[];
+  valor_hoje: number;
+  recorrencia: number;
+  recorrencia_anterior: number;
+  proximo_ciclo_em: string | null;
+  consequencias: string[];
+  exige_pagamento: boolean;
+};
+
+export type Checkout = {
+  pedido_id: number;
+  /** Nulo quando não havia o que cobrar: o efeito já foi aplicado. */
+  url: string | null;
+  aplicado: boolean;
+};
+
+export type StatusPedido = "pendente" | "pago" | "cancelado" | "expirado" | "falhou";
+
+export type Pedido = {
+  id: number;
+  tipo: string;
+  descricao: string;
+  valor_centavos: number;
+  recorrencia_centavos: number;
+  status: StatusPedido;
+  criado_em: string;
+  resolvido_em: string | null;
+};
+
+export type Fatura = {
+  id: number;
+  descricao: string;
+  valor_centavos: number;
+  status: "aberta" | "paga" | "falhou" | "estornada";
+  url_comprovante: string | null;
+  criado_em: string;
+  pago_em: string | null;
+};
+
+export type AssinaturaDetalhe = {
+  plano_codigo: string;
+  plano_nome: string;
+  preco_centavos: number;
+  carteira_max: number;
+  ofertas_incluidas: number;
+  status: "teste" | "ativa" | "inadimplente" | "cancelada";
+  renovacao_em: string | null;
+  cancelada_em: string | null;
+  dias_para_renovar: number | null;
+  ofertas_extras: number;
+  custo_ofertas_extras: number;
+  total_mensal: number;
+};
+
+/** O que a página do gateway simulado mostra. Não existe em produção. */
+export type CheckoutSimulado = {
+  sessao_id: string;
+  descricao: string;
+  valor_centavos: number;
+  recorrencia_centavos: number;
+  email: string;
+  url_retorno: string;
+  pedido_id: number | null;
+  status: string | null;
+};
+
+export type VisaoCobranca = {
+  mrr: number;
+  mrr_planos: number;
+  mrr_ofertas_extras: number;
+  arr: number;
+  pagantes: number;
+  ticket_medio: number;
+  contas_por_status: Record<string, number>;
+  por_plano: { nome: string; contas: number; mrr: number }[];
+  recebido_30d: number;
+  cancelamentos_30d: number;
+  /** Identifica a conta de propósito: sem saber quem contactar, a lista não serve. */
+  falhas: {
+    conta_id: number;
+    nome: string;
+    email: string;
+    descricao: string;
+    valor_centavos: number;
+    quando: string;
+  }[];
+};
+
+/**
+ * Restaura a sessão ao carregar a página.
+ *
+ * No produto isto é uma ida ao servidor levando o cookie `HttpOnly`. Aqui não
+ * há servidor nem cookie: a sessão vive em memória e recarregar começa do
+ * zero — que é o comportamento honesto para uma vitrine sem backend, e o
+ * `AvisoDemo` já avisa.
+ */
+export async function restaurar(): Promise<boolean> {
+  return tokens.temAcesso();
+}
+
 export class ErroApi extends Error {
   constructor(public status: number, mensagem: string) {
     super(mensagem);
   }
 }
 
-/* O contrato de token continua: o ProvedorAuth restaura a sessão a partir
-   do localStorage, e sem isso um F5 derrubaria o visitante da demonstração
-   para a tela de login. */
+/**
+ * Sessão em `sessionStorage` — e aqui a vitrine DIVERGE do produto de
+ * propósito.
+ *
+ * No produto (A6) o access token fica só em memória e quem sobrevive ao
+ * recarregamento é um cookie `HttpOnly`, que o servidor emite e o JavaScript
+ * não lê. Essa escolha protege uma credencial de verdade.
+ *
+ * Aqui não há servidor para emitir cookie nenhum, e o "token" é uma string
+ * inventada que não abre nada. Copiar o desenho do produto ao pé da letra
+ * deixaria a vitrine sem sessão nenhuma entre carregamentos: recarregar,
+ * abrir um link direto ou voltar pelo histórico jogaria o visitante no login.
+ * Numa vitrine, cujo propósito inteiro é ser navegada, isso não é rigor — é
+ * defeito.
+ *
+ * `sessionStorage` e não `localStorage`: a sessão morre ao fechar a aba, que
+ * é o mais perto do produto que dá para chegar sem backend.
+ */
+const CHAVE_SESSAO = "leads.demo";
+
 export const tokens = {
-  ler: () => ({
-    acesso: localStorage.getItem(CHAVE_ACESSO),
-    refresh: localStorage.getItem(CHAVE_REFRESH),
-  }),
-  gravar: (t: Tokens) => {
-    localStorage.setItem(CHAVE_ACESSO, t.access_token);
-    localStorage.setItem(CHAVE_REFRESH, t.refresh_token);
+  ler: () => {
+    const bruto = sessionStorage.getItem(CHAVE_SESSAO);
+    if (!bruto) return { acesso: null, csrf: null };
+    try {
+      const t = JSON.parse(bruto) as Tokens;
+      return { acesso: t.access_token, csrf: t.csrf_token };
+    } catch {
+      return { acesso: null, csrf: null };
+    }
   },
-  limpar: () => {
-    localStorage.removeItem(CHAVE_ACESSO);
-    localStorage.removeItem(CHAVE_REFRESH);
-  },
+  gravar: (t: Tokens) => sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(t)),
+  limpar: () => sessionStorage.removeItem(CHAVE_SESSAO),
+  temAcesso: () => sessionStorage.getItem(CHAVE_SESSAO) !== null,
 };
 
 /* -------------------------------------------------------------- dados */
@@ -440,6 +571,10 @@ const CONTA: Conta = {
   // administrativo, que faz parte do layout que se quer exibir.
   papel: "admin",
   criado_em: new Date(Date.now() - 214 * 86_400_000).toISOString(),
+  // Verificada de propósito: a vitrine mostra o produto EM USO, e um aviso
+  // permanente de "confirme seu e-mail" seria a primeira coisa que quem
+  // entra para avaliar veria. O fluxo tem tela própria e visitável.
+  email_verificado: true,
 };
 
 // Mutável: a tela de plano troca de verdade nesta vitrine, e a carteira do
@@ -662,6 +797,217 @@ function montarParametros(): Parametro[] {
 }
 
 
+// =============================================================================
+// COBRANÇA — estado da vitrine
+//
+// Mesma regra do resto do arquivo: muda de verdade enquanto a aba estiver
+// aberta. Um checkout onde nada acontece não mostra o produto, mostra um print.
+// =============================================================================
+const PRECO_OFERTA_ADICIONAL = 9700;
+const DIAS_CICLO = 30;
+
+let renovacaoEm: string | null = new Date(Date.now() + 22 * 86_400_000).toISOString();
+let canceladaEm: string | null = null;
+let statusAssinatura: AssinaturaDetalhe["status"] = "ativa";
+
+let faturasEmitidas: Fatura[] = [
+  {
+    id: 2, descricao: "Plano Solo", valor_centavos: 19700, status: "paga",
+    url_comprovante: null,
+    criado_em: new Date(Date.now() - 8 * 86_400_000).toISOString(),
+    pago_em: new Date(Date.now() - 8 * 86_400_000).toISOString(),
+  },
+  {
+    id: 1, descricao: "Plano Início", valor_centavos: 9700, status: "paga",
+    url_comprovante: null,
+    criado_em: new Date(Date.now() - 38 * 86_400_000).toISOString(),
+    pago_em: new Date(Date.now() - 38 * 86_400_000).toISOString(),
+  },
+];
+let proximaFatura = 3;
+let pedidos: (Pedido & { referencia?: string })[] = [];
+let proximoPedido = 1;
+
+function brl(centavos: number): string {
+  return `R$ ${(centavos / 100).toFixed(2)}`.replace(".", ",");
+}
+
+function milhar(n: number): string {
+  return n.toLocaleString("pt-BR");
+}
+
+function diasRestantes(): number {
+  if (!renovacaoEm) return DIAS_CICLO;
+  const dias = Math.ceil((new Date(renovacaoEm).getTime() - Date.now()) / 86_400_000);
+  return Math.max(0, Math.min(DIAS_CICLO, dias));
+}
+
+/**
+ * Monta o orçamento com a MESMA política do servidor.
+ *
+ * Primeira assinatura cobra cheio; upgrade cobra só a diferença proporcional;
+ * downgrade não cobra nem devolve e vale na renovação; oferta acima da cota é
+ * proporcional. Repetir a regra aqui é o preço de a vitrine não ter backend —
+ * e é por isso que ela vive neste arquivo, que é o ponto único de divergência.
+ */
+function orcar(tipo: string, referencia: string): Orcamento {
+  const dias = diasRestantes();
+
+  if (tipo === "plano") {
+    const novo = PLANOS.find((x) => x.codigo === referencia);
+    if (!novo) throw new ErroApi(409, "Plano não encontrado.");
+    if (novo.codigo === planoAtual.codigo && statusAssinatura === "ativa") {
+      throw new ErroApi(409, "Este já é o seu plano.");
+    }
+    if (novo.preco_centavos === 0) {
+      throw new ErroApi(
+        409,
+        "O plano de teste não é contratável — ele vem com a conta nova. " +
+          "Para parar de pagar, cancele a assinatura.",
+      );
+    }
+    if (contratadas.length > novo.ofertas_incluidas) {
+      throw new ErroApi(
+        409,
+        `Você tem ${contratadas.length} tipos de oferta contratados e o plano ` +
+          `${novo.nome} inclui ${novo.ofertas_incluidas}. Remova as excedentes antes.`,
+      );
+    }
+
+    const emTeste = statusAssinatura === "teste" || statusAssinatura === "cancelada";
+    if (emTeste) {
+      return {
+        tipo: "plano", referencia: novo.codigo, titulo: `Plano ${novo.nome}`,
+        linhas: [
+          { descricao: `Plano ${novo.nome} — primeiro mês`, valor_centavos: novo.preco_centavos },
+        ],
+        valor_hoje: novo.preco_centavos,
+        recorrencia: novo.preco_centavos,
+        recorrencia_anterior: planoAtual.preco_centavos,
+        proximo_ciclo_em: null,
+        consequencias: [
+          `Sua carteira passa de ${milhar(planoAtual.carteira_max)} para ${milhar(novo.carteira_max)} reservas simultâneas.`,
+          `O plano inclui ${novo.ofertas_incluidas} tipo(s) de oferta.`,
+          "A cobrança se repete a cada 30 dias até você cancelar.",
+        ],
+        exige_pagamento: true,
+      };
+    }
+
+    if (novo.preco_centavos > planoAtual.preco_centavos) {
+      const diferenca = Math.round(
+        ((novo.preco_centavos - planoAtual.preco_centavos) * dias) / DIAS_CICLO,
+      );
+      return {
+        tipo: "plano", referencia: novo.codigo, titulo: `Plano ${novo.nome}`,
+        linhas: [
+          { descricao: `Plano ${novo.nome}`, valor_centavos: novo.preco_centavos },
+          { descricao: `Crédito do plano ${planoAtual.nome}`, valor_centavos: -planoAtual.preco_centavos },
+          { descricao: `Proporcional a ${dias} dia(s) restantes do ciclo`, valor_centavos: 0 },
+        ],
+        valor_hoje: diferenca,
+        recorrencia: novo.preco_centavos,
+        recorrencia_anterior: planoAtual.preco_centavos,
+        proximo_ciclo_em: renovacaoEm,
+        consequencias: [
+          `Sua carteira sobe de ${milhar(planoAtual.carteira_max)} para ${milhar(novo.carteira_max)} reservas simultâneas, na hora.`,
+          `Hoje você paga só a diferença dos ${dias} dia(s) que faltam no ciclo. A partir da renovação, ${brl(novo.preco_centavos)} por mês.`,
+        ],
+        exige_pagamento: true,
+      };
+    }
+
+    return {
+      tipo: "plano", referencia: novo.codigo, titulo: `Plano ${novo.nome}`,
+      linhas: [
+        { descricao: `Plano ${novo.nome} — a partir da renovação`, valor_centavos: novo.preco_centavos },
+      ],
+      valor_hoje: 0,
+      recorrencia: novo.preco_centavos,
+      recorrencia_anterior: planoAtual.preco_centavos,
+      proximo_ciclo_em: renovacaoEm,
+      consequencias: [
+        `Nada é cobrado agora, e nada é devolvido: você continua com o plano ${planoAtual.nome} até o fim do ciclo que já pagou.`,
+        `Na renovação, a carteira passa a ${milhar(novo.carteira_max)} reservas e a cobrança a ${brl(novo.preco_centavos)}.`,
+        "As reservas que você já tem não são canceladas, mesmo que passem do teto do plano menor — você pagou por elas.",
+      ],
+      exige_pagamento: false,
+    };
+  }
+
+  const oferta = OFERTAS.find((o) => String(o.id) === referencia);
+  if (!oferta) throw new ErroApi(409, "Oferta não encontrada.");
+  if (contratadas.some((o) => o.id === oferta.id)) {
+    throw new ErroApi(409, "Oferta já contratada.");
+  }
+
+  if (contratadas.length < planoAtual.ofertas_incluidas) {
+    return {
+      tipo: "oferta", referencia: String(oferta.id), titulo: oferta.nome,
+      linhas: [{ descricao: `${oferta.nome} — incluída no plano`, valor_centavos: 0 }],
+      valor_hoje: 0, recorrencia: 0, recorrencia_anterior: 0,
+      proximo_ciclo_em: renovacaoEm,
+      consequencias: [
+        `Seu plano inclui ${planoAtual.ofertas_incluidas} tipo(s) de oferta e você usa ${contratadas.length}. Esta entra sem custo adicional.`,
+        "Cada empresa pode receber propostas de tipos diferentes, mas nunca a mesma proposta duas vezes — é o que a regra R3 protege.",
+      ],
+      exige_pagamento: false,
+    };
+  }
+
+  return {
+    tipo: "oferta", referencia: String(oferta.id), titulo: oferta.nome,
+    linhas: [
+      { descricao: `${oferta.nome} — oferta adicional`, valor_centavos: PRECO_OFERTA_ADICIONAL },
+      { descricao: `Proporcional a ${dias} dia(s) restantes do ciclo`, valor_centavos: 0 },
+    ],
+    valor_hoje: Math.round((PRECO_OFERTA_ADICIONAL * dias) / DIAS_CICLO),
+    recorrencia: PRECO_OFERTA_ADICIONAL,
+    recorrencia_anterior: 0,
+    proximo_ciclo_em: renovacaoEm,
+    consequencias: [
+      `Seu plano ${planoAtual.nome} inclui ${planoAtual.ofertas_incluidas} tipo(s) de oferta e já estão todos em uso. Esta é adicional.`,
+      `Hoje sai o proporcional dos ${dias} dia(s) que faltam; depois, ${brl(PRECO_OFERTA_ADICIONAL)} por mês somados ao plano.`,
+      "Subir de plano pode sair mais barato que somar ofertas avulsas — compare antes de fechar.",
+    ],
+    exige_pagamento: true,
+  };
+}
+
+/** Aplica o que foi comprado. Na vitrine não há gateway: o efeito é imediato. */
+function aplicarPedido(pedido: Pedido & { referencia?: string }): void {
+  if (pedido.status === "pago") return;
+
+  if (pedido.tipo === "plano") {
+    const novo = PLANOS.find((x) => x.codigo === pedido.referencia);
+    if (novo) planoAtual = novo;
+    statusAssinatura = "ativa";
+    canceladaEm = null;
+    renovacaoEm = new Date(Date.now() + DIAS_CICLO * 86_400_000).toISOString();
+  } else {
+    const oferta = OFERTAS.find((o) => String(o.id) === pedido.referencia);
+    if (oferta && !contratadas.some((o) => o.id === oferta.id)) {
+      contratadas = [...contratadas, oferta];
+    }
+  }
+
+  pedido.status = "pago";
+  pedido.resolvido_em = new Date().toISOString();
+
+  if (pedido.valor_centavos > 0) {
+    faturasEmitidas = [
+      {
+        id: proximaFatura++, descricao: pedido.descricao,
+        valor_centavos: pedido.valor_centavos, status: "paga",
+        url_comprovante: null,
+        criado_em: new Date().toISOString(), pago_em: new Date().toISOString(),
+      },
+      ...faturasEmitidas,
+    ];
+  }
+}
+
+
 export const api = {
   // -------------------------------------------------------------- conta
   perfil: () => responder(CONTA),
@@ -817,6 +1163,105 @@ export const api = {
     return responder({ id: alvo.id, papel });
   },
 
+  // ------------------------------------------------------------- cobrança
+  orcamento: (tipo: string, referencia: string) => responder(orcar(tipo, referencia)),
+
+  abrirCheckout: (tipo: string, referencia: string) => {
+    const o = orcar(tipo, referencia);
+    const pedido = {
+      id: proximoPedido++, tipo: o.tipo, descricao: o.titulo,
+      referencia: o.referencia,
+      valor_centavos: o.valor_hoje, recorrencia_centavos: o.recorrencia,
+      status: "pendente" as StatusPedido,
+      criado_em: new Date().toISOString(), resolvido_em: null,
+    };
+    pedidos = [...pedidos, pedido];
+
+    // Na vitrine não há gateway hospedado: aplica direto e devolve
+    // `aplicado: true`. É o MESMO caminho que o produto usa quando não há o
+    // que cobrar — o desfecho do downgrade —, então a tela já sabe lidar sem
+    // precisar de um ramo só para a vitrine.
+    aplicarPedido(pedido);
+    return responder<Checkout>({ pedido_id: pedido.id, url: null, aplicado: true });
+  },
+
+  verPedido: (id: number) => {
+    const p = pedidos.find((x) => x.id === id);
+    if (!p) throw new ErroApi(404, "Pedido não encontrado");
+    return responder<Pedido>(p);
+  },
+
+  assinaturaDetalhe: () => {
+    const extras = Math.max(0, contratadas.length - planoAtual.ofertas_incluidas);
+    const custoExtras = extras * PRECO_OFERTA_ADICIONAL;
+    return responder<AssinaturaDetalhe>({
+      plano_codigo: planoAtual.codigo, plano_nome: planoAtual.nome,
+      preco_centavos: planoAtual.preco_centavos,
+      carteira_max: planoAtual.carteira_max,
+      ofertas_incluidas: planoAtual.ofertas_incluidas,
+      status: statusAssinatura, renovacao_em: renovacaoEm, cancelada_em: canceladaEm,
+      dias_para_renovar: diasRestantes(),
+      ofertas_extras: extras, custo_ofertas_extras: custoExtras,
+      total_mensal: planoAtual.preco_centavos + custoExtras,
+    });
+  },
+
+  faturas: () => responder(faturasEmitidas),
+
+  cancelarAssinatura: () => {
+    if (canceladaEm) throw new ErroApi(409, "A assinatura já está cancelada");
+    canceladaEm = new Date().toISOString();
+    return responder<void>(undefined);
+  },
+
+  reativarAssinatura: () => {
+    if (!canceladaEm) throw new ErroApi(409, "A assinatura não está cancelada");
+    canceladaEm = null;
+    return responder<void>(undefined);
+  },
+
+  // ------------------------------------------------ verificação de e-mail
+  verificarEmail: (token: string) => {
+    if (!token || token.length < 8) {
+      throw new ErroApi(
+        400,
+        "Link inválido ou já utilizado. Peça um novo e-mail de confirmação.",
+      );
+    }
+    CONTA.email_verificado = true;
+    return responder({ ...CONTA });
+  },
+
+  reenviarVerificacao: () =>
+    responder({ enviado_para: CONTA.email, validade_horas: 48 }),
+
+  // ----------------------------------------------------- cobrança (admin)
+  adminCobranca: () => {
+    const mrrPlanos = 19700 + 49700 + 89700;
+    const extras = PRECO_OFERTA_ADICIONAL * 2;
+    const pagantes = 3;
+    return responder<VisaoCobranca>({
+      mrr: mrrPlanos + extras, mrr_planos: mrrPlanos, mrr_ofertas_extras: extras,
+      arr: (mrrPlanos + extras) * 12, pagantes,
+      ticket_medio: Math.round((mrrPlanos + extras) / pagantes),
+      contas_por_status: { ativa: 3, teste: 1, inadimplente: 1, cancelada: 1 },
+      por_plano: [
+        { nome: "Solo", contas: 1, mrr: 19700 },
+        { nome: "Equipe", contas: 1, mrr: 49700 },
+        { nome: "Operação", contas: 1, mrr: 89700 },
+      ],
+      recebido_30d: mrrPlanos + extras,
+      cancelamentos_30d: 1,
+      falhas: [
+        {
+          conta_id: 4, nome: "Bruno Freela", email: "bruno@freela.com.br",
+          descricao: "Plano Início", valor_centavos: 9700,
+          quando: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+        },
+      ],
+    });
+  },
+
   // ----------------------------------------------------------- landing
   registrarInteresse: (email: string, cidade_interesse?: string) =>
     responder({
@@ -838,7 +1283,7 @@ export const api = {
   registrar: (_nome: string, _email: string, _senha: string) =>
     responder<Tokens>({
       access_token: "vitrine",
-      refresh_token: "vitrine",
+      csrf_token: "csrf-de-demonstracao",
       expira_em_minutos: 15,
     }),
 
@@ -847,7 +1292,7 @@ export const api = {
   entrar: (_email: string, _senha: string) =>
     responder<Tokens>({
       access_token: "vitrine",
-      refresh_token: "vitrine",
+      csrf_token: "csrf-de-demonstracao",
       expira_em_minutos: 15,
     }),
 

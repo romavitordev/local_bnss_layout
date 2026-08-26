@@ -6,9 +6,10 @@ publicada no GitHub Pages. React + TypeScript + Vite, com React Router.
 **No ar:** https://romavitordev.github.io/local_bnss_layout/
 
 > Todas as telas estão aqui — landing, login, cadastro, painel, carteira,
-> territórios, pressão, perfil, plano e as cinco do console interno — mas
-> rodando sobre dados de exemplo que vivem no navegador. O login aceita
-> qualquer credencial e nada é gravado.
+> territórios, pressão, perfil, plano, **as seis de cobrança**, a de
+> confirmação de e-mail e as **seis** do console interno — mas rodando sobre
+> dados de exemplo que vivem no navegador. O login aceita qualquer credencial
+> e nada é gravado.
 >
 > O produto de verdade tem backend em FastAPI: autenticação, motor de
 > alocação, cooldown, exportação e o crawl que alimenta o inventário. Ele
@@ -54,6 +55,23 @@ enquanto a aba estiver aberta, com a mesma validação de faixa do produto.
 O que não acontece é a consequência: no original, mexer em R2 muda a
 próxima alocação de verdade.
 
+## Cobrança
+
+Seis telas: catálogo de planos, checkout, central de assinatura, retorno do
+pagamento, regularização e cancelamento. Mais o painel de receita no console.
+
+**O dinheiro se comporta de verdade.** O orçamento aplica a mesma política do
+servidor — primeira assinatura cobra cheio, upgrade cobra só a diferença
+proporcional aos dias restantes, downgrade não cobra nem devolve e vale na
+renovação, oferta acima da cota é proporcional. Trocar de plano muda a carteira
+do painel, emite fatura no histórico e a data de renovação anda junto.
+
+A única simplificação: não há gateway. O checkout aplica direto e devolve
+`aplicado: true` — que é o **mesmo caminho** que o produto usa quando não há o
+que cobrar, então nenhuma tela precisou de um ramo especial para a vitrine.
+
+---
+
 ## Como a vitrine difere do produto
 
 A diferença inteira mora em **um arquivo**: `src/api/cliente.ts`.
@@ -76,6 +94,9 @@ mostra um print.
 |---|---|
 | dados | em memória, determinísticos; 3.055 empresas em 5 cidades |
 | login | aceita qualquer e-mail e senha; a conta demo é `admin`, para o painel interno ficar visível |
+| sessão | `sessionStorage`, e aqui a vitrine **diverge de propósito**: o produto guarda o access token só em memória e restaura por cookie `HttpOnly`, que precisa de servidor. Copiar isso ao pé da letra deixaria a vitrine sem sessão entre carregamentos — recarregar ou abrir link direto cairia no login, o que numa vitrine é defeito, não rigor |
+| cobrança | o orçamento e o proporcional são calculados no navegador, com a mesma política do servidor |
+| e-mail | a conta demo já vem confirmada, para o aviso de verificação não ser a primeira coisa que se vê. A tela de confirmação é visitável em `/verificar-email?token=qualquercoisa` |
 | exportar CSV | montado no navegador a partir da carteira |
 | exportar XLSX | recusado com explicação — o arquivo real é montado pelo backend |
 | WhatsApp | o link `wa.me` é real e abre mesmo; o número é de exemplo |

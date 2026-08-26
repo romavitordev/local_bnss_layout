@@ -1,8 +1,13 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import AvisoDemo from "./componentes/AvisoDemo";
 import Layout from "./componentes/Layout";
 import LayoutAdmin from "./componentes/LayoutAdmin";
+import AvisoDemo from "./componentes/AvisoDemo";
 import { ProvedorAuth, useAuth } from "./contexto/Auth";
+import Assinar from "./rotas/Assinar";
+import Assinatura from "./rotas/Assinatura";
+import AssinaturaCancelar from "./rotas/AssinaturaCancelar";
+import AssinaturaRegularizar from "./rotas/AssinaturaRegularizar";
+import AssinaturaRetorno from "./rotas/AssinaturaRetorno";
 import Carteira from "./rotas/Carteira";
 import CriarConta from "./rotas/CriarConta";
 import Entrar from "./rotas/Entrar";
@@ -13,6 +18,8 @@ import Perfil from "./rotas/Perfil";
 import Plano from "./rotas/Plano";
 import Pressao from "./rotas/Pressao";
 import Territorios from "./rotas/Territorios";
+import VerificarEmail from "./rotas/VerificarEmail";
+import Cobranca from "./rotas/admin/Cobranca";
 import Contas from "./rotas/admin/Contas";
 import Interessados from "./rotas/admin/Interessados";
 import Inventario from "./rotas/admin/Inventario";
@@ -55,8 +62,8 @@ function RotaDeAdmin() {
 
 export default function App() {
   // `basename` vem do BASE_URL do Vite, que é o mesmo `/local_bnss_layout/`
-  // do build. Sem ele, o roteador acha que está na raiz do domínio e
-  // toda navegação interna cai fora do subcaminho — a página some.
+  // do build. Sem ele, o roteador acha que está na raiz do domínio e toda
+  // navegação interna cai fora do subcaminho — a página some.
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ProvedorAuth>
@@ -64,6 +71,12 @@ export default function App() {
           {/* A landing é aberta a todos, inclusive a quem já está logado:
               é a página institucional do produto, não um passo do cadastro. */}
           <Route path="/" element={<Landing />} />
+
+          {/* Fora de RotaPublica: quem clica no link do e-mail pode estar em
+              outro aparelho OU já logado, e nos dois casos precisa cair aqui.
+              Dentro de RotaPublica, quem já tem sessão seria desviado para o
+              painel sem nunca confirmar nada. */}
+          <Route path="/verificar-email" element={<VerificarEmail />} />
 
           <Route element={<RotaPublica />}>
             <Route path="/entrar" element={<Entrar />} />
@@ -79,6 +92,16 @@ export default function App() {
               <Route path="/pressao" element={<Pressao />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/plano" element={<Plano />} />
+
+              {/* Cobrança. `/assinar` é o único lugar do produto onde dinheiro
+                  é confirmado — os cinco carrinhos (primeira assinatura,
+                  upgrade, downgrade, oferta adicional, exclusividade) passam
+                  todos por ele, com o orçamento montado no servidor. */}
+              <Route path="/assinar" element={<Assinar />} />
+              <Route path="/assinatura" element={<Assinatura />} />
+              <Route path="/assinatura/retorno" element={<AssinaturaRetorno />} />
+              <Route path="/assinatura/regularizar" element={<AssinaturaRegularizar />} />
+              <Route path="/assinatura/cancelar" element={<AssinaturaCancelar />} />
             </Route>
 
             {/* Console da plataforma: operar o produto, não usá-lo. */}
@@ -88,6 +111,7 @@ export default function App() {
                 <Route path="/admin/contas" element={<Contas />} />
                 <Route path="/admin/inventario" element={<Inventario />} />
                 <Route path="/admin/plataforma" element={<Plataforma />} />
+                <Route path="/admin/cobranca" element={<Cobranca />} />
                 <Route path="/admin/interessados" element={<Interessados />} />
               </Route>
             </Route>

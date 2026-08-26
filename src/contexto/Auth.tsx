@@ -2,7 +2,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useState,
 } from "react";
 import type { ReactNode } from "react";
-import { api, tokens, type Conta } from "../api/cliente";
+import { api, restaurar, tokens, type Conta } from "../api/cliente";
 
 type EstadoAuth = {
   conta: Conta | null;
@@ -10,6 +10,10 @@ type EstadoAuth = {
   entrar: (email: string, senha: string) => Promise<void>;
   registrar: (nome: string, email: string, senha: string) => Promise<void>;
   sair: () => Promise<void>;
+  /** Relê a conta do servidor. Usado quando algo muda o estado dela por fora
+   *  da sessão — o link de verificação de e-mail, por exemplo, que pode ser
+   *  aberto em outro aparelho. */
+  recarregar: () => Promise<void>;
 };
 
 const Contexto = createContext<EstadoAuth | null>(null);
@@ -19,17 +23,21 @@ export function ProvedorAuth({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
 
   // Restaura a sessão no primeiro render: sem isso, um F5 derruba o usuário.
+  //
+  // No produto isto é uma ida ao servidor levando o cookie `HttpOnly` (A6).
+  // Na vitrine não há servidor nem cookie: `restaurar()` só confere a memória,
+  // então recarregar volta ao login. É o comportamento honesto para uma
+  // demonstração sem backend, e o aviso no rodapé já diz isso.
   useEffect(() => {
-    const { acesso } = tokens.ler();
-    if (!acesso) {
-      setCarregando(false);
-      return;
-    }
-    api
-      .eu()
-      .then(setConta)
-      .catch(() => tokens.limpar())
-      .finally(() => setCarregando(false));
+    void (async () => {
+      try {
+        if (await restaurar()) setConta(await api.eu());
+      } catch {
+        tokens.limpar();
+      } finally {
+        setCarregando(false);
+      }
+    })();
   }, []);
 
   const entrar = useCallback(async (email: string, senha: string) => {
@@ -39,6 +47,10 @@ export function ProvedorAuth({ children }: { children: ReactNode }) {
 
   const registrar = useCallback(async (nome: string, email: string, senha: string) => {
     tokens.gravar(await api.registrar(nome, email, senha));
+    setConta(await api.eu());
+  }, []);
+
+  const recarregar = useCallback(async () => {
     setConta(await api.eu());
   }, []);
 
@@ -55,8 +67,8 @@ export function ProvedorAuth({ children }: { children: ReactNode }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ conta, carregando, entrar, registrar, sair }),
-    [conta, carregando, entrar, registrar, sair],
+    () => ({ conta, carregando, entrar, registrar, sair, recarregar }),
+    [conta, carregando, entrar, registrar, sair, recarregar],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

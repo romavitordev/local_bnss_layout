@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ErroApi } from "../api/cliente";
 import { useAuth } from "../contexto/Auth";
+import Marca from "../componentes/Marca";
 
 const SENHA_MINIMA = 8;
 
@@ -37,10 +38,7 @@ export default function CriarConta() {
   return (
     <div className="tela-acesso">
       <form className="cartao-acesso" onSubmit={enviar}>
-        <div className="marca marca-grande">
-          <span className="marca-nome">Leads</span>
-          <span className="marca-sub">carteira de reservas</span>
-        </div>
+        <Marca variante="acesso" />
 
         <h1>Criar conta</h1>
         <p className="ajuda">

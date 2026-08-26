@@ -21,6 +21,7 @@
   --luz: #eceaf5;
   --bruma: #9490ab;
   --violeta: #6d4aff;
+  --violeta-claro: #a58bff;
   --ciano: #00d4c8;
   --lima: #a6ff4d;
   --elev-1: 0 1px 0 0 rgba(236, 234, 245, 0.05) inset,
@@ -161,9 +162,17 @@
 /* ------------------------------------------------------------------ tabela */
 .lp-tabela {
   margin: 30px 0 26px; border: 1px solid var(--linha-lp); border-radius: 12px;
-  background: var(--abismo); box-shadow: var(--elev-1); overflow-x: auto;
+  background: var(--abismo); box-shadow: var(--elev-1);
 }
-.lp-tabela table { min-width: 420px; }
+/* Sem `min-width` e sem `overflow-x`.
+   É a terceira vez que esta armadilha aparece no projeto: uma largura mínima
+   pensada para tabela larga de dados vaza para uma tabela de três colunas
+   curtas, e o resultado é barra de rolagem escondendo a coluna da direita.
+   Aqui a largura mínima é o próprio conteúdo, e o conteúdo pode quebrar. */
+.lp-tabela table { min-width: 0; width: 100%; table-layout: auto; }
+.lp-tabela th, .lp-tabela td { white-space: normal; overflow-wrap: break-word; }
+/* A primeira coluna é a única com frase; as de número ficam com o mínimo. */
+.lp-tabela th:first-child, .lp-tabela td:first-child { width: 55%; }
 .lp-tabela th {
   background: transparent; color: var(--bruma); border-bottom: 1px solid var(--linha-lp);
   font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.1em;
@@ -183,7 +192,10 @@
   border-radius: 14px; padding: 26px 24px; box-shadow: var(--elev-1);
 }
 /* Os passos percorrem a escala: ideia → sistema → resultado. */
-.lp-passos li:nth-child(1) .lp-numero { color: var(--violeta); border-color: var(--violeta); }
+/* `--violeta-claro` no número: o violeta cheio dá 3,82 sobre o fundo da
+   landing. A borda pode continuar no tom forte — borda não é texto e a WCAG
+   pede 3:1 para ela, que o violeta cumpre. */
+.lp-passos li:nth-child(1) .lp-numero { color: var(--violeta-claro); border-color: var(--violeta); }
 .lp-passos li:nth-child(2) .lp-numero { color: var(--ciano); border-color: var(--ciano); }
 .lp-passos li:nth-child(3) .lp-numero { color: var(--lima); border-color: var(--lima); }
 .lp-numero {
@@ -232,30 +244,94 @@
 
 /* ------------------------------------------------------------------ rodapé */
 .lp-rodape { border-top: 1px solid var(--linha-lp); background: var(--nevoa); padding: 56px 0 40px; }
-.lp-rodape-grade { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 40px 28px; }
-.lp-rodape h4 {
-  font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500;
-  letter-spacing: 0.13em; text-transform: uppercase; color: var(--bruma); margin: 0 0 14px;
+.lp-rodape-grade {
+  display: grid; gap: 40px 32px;
+  /* A coluna da marca é mais larga: ela carrega a tagline e a descrição, e
+     espremê-la ao mesmo tamanho das listas de links faria o texto quebrar de
+     duas em duas palavras. */
+  grid-template-columns: 1.6fr 1fr 1.2fr 1.1fr;
 }
-.lp-rodape ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 9px; }
-.lp-rodape a { color: var(--bruma); text-decoration: none; font-size: 14px; }
-.lp-rodape a:hover { color: var(--luz); }
-.lp-rodape-sobre { font-size: 14px; color: var(--bruma); line-height: 1.6; margin: 12px 0 0; max-width: 34ch; }
-.lp-rodape-fim {
-  margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--linha-lp);
-  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  font-size: 13px; color: #6b6784;
+.lp-rodape-marca { display: flex; flex-direction: column; gap: 14px; }
+.lp-rodape-tagline {
+  margin: 0; font-family: "Instrument Serif", Georgia, serif;
+  font-size: 1.05rem; font-style: italic; color: var(--luz); max-width: 24ch;
+}
+.lp-rodape-sobre {
+  margin: 0; font-size: 13.5px; color: var(--bruma);
+  line-height: 1.6; max-width: 30ch;
+}
+.lp-rodape-grade h4 {
+  margin: 0 0 14px; font-family: "IBM Plex Mono", monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--bruma); font-weight: 500;
+}
+.lp-rodape-grade ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 9px; }
+.lp-rodape-grade ul a {
+  color: var(--bruma); text-decoration: none; font-size: 13.5px;
+  transition: color 0.2s var(--saida);
+}
+.lp-rodape-grade ul a:hover { color: var(--luz); }
+
+/* Links de contato com ícone. `align-items: center` e não baseline: o ícone
+   tem altura própria e alinhar pela base o deixa flutuando. */
+.lp-rodape-contato a { display: inline-flex; align-items: center; gap: 9px; }
+.lp-rodape-contato svg { width: 15px; height: 15px; flex: none; opacity: 0.75; }
+.lp-rodape-horario {
+  margin: 16px 0 0; font-size: 12.5px; color: var(--bruma); line-height: 1.6;
 }
 
-@media (max-width: 860px) {
-  .lp-rodape-grade { grid-template-columns: 1fr 1fr; }
+.lp-rodape-cta {
+  display: inline-flex; align-items: center; margin-top: 16px;
+  padding: 10px 20px; border-radius: 999px;
+  background: var(--luz); color: var(--abismo);
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: transform 0.2s var(--saida), opacity 0.2s var(--saida);
 }
+.lp-rodape-cta:hover { transform: translateY(-1px); opacity: 0.92; }
+.lp-rodape-cta:active { transform: translateY(1px); }
+
+/* Cadastro sob a marca, discreto. Menor e mais apagado que a descrição acima:
+   quem procura CNPJ vai atrás dele, e quem não procura não deve tropeçar.
+   A versão anterior era uma CAIXA TRACEJADA no meio do rodapé — um retângulo
+   com borda pontilhada não comunica "exemplo", só rouba a atenção do que
+   importa e cria uma divisão onde não havia seção. */
+.lp-rodape-cadastro {
+  margin: 4px 0 0; font-size: 12px; color: var(--bruma);
+  line-height: 1.65; opacity: 0.82; max-width: 34ch;
+}
+
+.lp-rodape-fim p { margin: 0; }
+.lp-rodape-legal { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.lp-rodape-legal a { color: var(--bruma); text-underline-offset: 3px; }
+.lp-rodape-legal a:hover { color: var(--luz); }
+.lp-rodape-lgpd { max-width: 52ch; text-align: right; line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .lp-rodape-grade { grid-template-columns: 1fr 1fr; gap: 34px 28px; }
+}
+@media (max-width: 560px) {
+  .lp-rodape-grade { grid-template-columns: 1fr; }
+  /* No estreito a linha final empilha e o texto legal volta a alinhar à
+     esquerda — texto corrido alinhado à direita numa coluna estreita produz
+     uma borda serrilhada que atrapalha a leitura. */
+  .lp-rodape-legal { align-items: flex-start; }
+  .lp-rodape-lgpd { text-align: left; }
+}
+
+
+/* -----------------------------------------------------------------------------
+   Ajustes de tela estreita que a reescrita do rodapé removeu por engano.
+   Registrado porque o defeito voltou: a tabela de saturação passou a rolar de
+   novo (+24px em 320px), e o teste pegou. Substituir um trecho de arquivo por
+   índice leva junto o que estava no meio — é o risco de editar por posição em
+   vez de por conteúdo.
+   -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
   .lp-menu a:not(.lp-entrar) { display: none; }
+  /* Respiro menor: em 320px a soma dos paddings comia a largura que o texto
+     da primeira coluna precisa para não virar uma palavra por linha. */
+  .lp-tabela th, .lp-tabela td { padding: 11px 10px; }
+  .lp-tabela th { font-size: 9.5px; letter-spacing: 0.06em; }
   .lp-hero { padding: 128px 0 64px; }
   .lp-secao { padding: 60px 0; }
-  .lp-rodape-grade { grid-template-columns: 1fr; gap: 30px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lp-topo { transition: none; }
 }

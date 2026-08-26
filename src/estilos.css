@@ -41,6 +41,7 @@
   --acento-forte: #4ee8de;
   --acento-suave: rgba(0, 212, 200, 0.12);
   --lima: #a6ff4d;
+  --tinta-sobre-lima: #0b0a12;
 
   --alerta: #d9a648;
   --alerta-suave: rgba(217, 166, 72, 0.12);
@@ -78,15 +79,26 @@
     --violeta: #5b39e8;
     --violeta-forte: #4a2bd4;
     --azul: #1a6fd8;
-    --acento: #0a8a80;
+    /* Acento e lima escurecidos para o tema CLARO, e o motivo é medido.
+       O original (#0a8a80) dava 3,73 de contraste sobre o próprio fundo
+       pálido, contra os 4,5 que a WCAG exige para texto pequeno. Atingia o
+       item ATIVO do menu e o chip selecionado — justamente os que sinalizam
+       onde a pessoa está.
+       A primeira tentativa (#08776f) chegou a 4,48 em fundos mais tingidos:
+       dois centésimos abaixo. Estes valores passam com folga até a 18% de
+       tinta, porque raspar o limite significa voltar aqui no próximo ajuste
+       de opacidade. O tema escuro já passava — foi o claro que ninguém
+       tinha medido. */
+    --acento: #07665f;
     --acento-forte: #076b63;
     --acento-suave: rgba(10, 138, 128, 0.1);
-    --lima: #4a7d10;
+    --lima: #3f6b0d;
+    --tinta-sobre-lima: #ffffff;
 
     --alerta: #8a6110;
     --alerta-suave: rgba(138, 97, 16, 0.09);
     --alerta-linha: rgba(138, 97, 16, 0.28);
-    --perigo: #c2352f;
+    --perigo: #b02b26;
     --perigo-suave: rgba(194, 53, 47, 0.09);
 
     --elev-1: 0 1px 2px rgba(22, 20, 31, 0.04), 0 8px 24px -18px rgba(22, 20, 31, 0.24);
@@ -108,14 +120,15 @@
   --violeta: #5b39e8;
   --violeta-forte: #4a2bd4;
   --azul: #1a6fd8;
-  --acento: #0a8a80;
+  --acento: #07665f;
   --acento-forte: #076b63;
   --acento-suave: rgba(10, 138, 128, 0.1);
-  --lima: #4a7d10;
+  --lima: #3f6b0d;
+  --tinta-sobre-lima: #ffffff;
   --alerta: #8a6110;
   --alerta-suave: rgba(138, 97, 16, 0.09);
   --alerta-linha: rgba(138, 97, 16, 0.28);
-  --perigo: #c2352f;
+  --perigo: #b02b26;
   --perigo-suave: rgba(194, 53, 47, 0.09);
   --elev-1: 0 1px 2px rgba(22, 20, 31, 0.04), 0 8px 24px -18px rgba(22, 20, 31, 0.24);
   --elev-2: 0 1px 2px rgba(22, 20, 31, 0.05), 0 18px 44px -26px rgba(22, 20, 31, 0.3);
@@ -164,23 +177,30 @@ a:hover { color: var(--acento-forte); }
   max-width: 1200px; margin: 0 auto; padding: 0 22px;
   height: 66px; display: flex; align-items: center; gap: 26px;
 }
-.marca { display: flex; flex-direction: column; line-height: 1.15; }
-.marca-nome {
-  font-family: "Instrument Serif", Georgia, serif;
-  font-weight: 400; font-size: 1.2rem; letter-spacing: -0.01em;
-}
-.marca-sub {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 9.5px; text-transform: uppercase;
-  letter-spacing: 0.22em; color: var(--apagado);
-}
-.marca-grande { align-items: center; margin-bottom: 20px; }
-.marca-grande .marca-nome { font-size: 1.7rem; }
+/* Quem cede espaço é o menu, nunca a marca nem o bloco da direita — sem isto
+   o botão Sair era o primeiro a sair da viewport, ficando inalcançável. */
+.usuario { flex: none; }
+/* As regras de `.marca` ficam todas no bloco MARCA, no fim do arquivo.
+   Havia uma segunda definição aqui com `flex-direction: column`, e ela vencia
+   a nova por vir depois na cascata em alguns casos e antes em outros — o
+   resultado era a marca empilhada na landing e em linha no painel, sem que
+   nada no código dissesse por quê. Definição de um componente em dois lugares
+   é sempre isso. */
 
-.menu { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+/* `flex-wrap: wrap` aqui era a origem do defeito: o contêiner tem altura
+   fixa de 66px, então as linhas extras não empurravam a barra — vazavam por
+   cima da borda. Em 1024px já eram três linhas. Sem envolver, o excesso vira
+   um problema visível de largura, que é resolvido pelo breakpoint. */
+.menu { display: flex; gap: 4px; flex: 1; min-width: 0; flex-wrap: nowrap; }
 .menu-link {
   padding: 7px 14px; border-radius: 999px; text-decoration: none;
   color: var(--apagado); font-size: 13.5px; font-weight: 500;
+  /* `flex: none` + `nowrap`: sem isto os links comprimiam abaixo do próprio
+     texto e SE SOBREPUNHAM — em 1024px "Pressão" e "Perfil" saíam impressos
+     um por cima do outro. Comprimir é pior que envolver, porque parece fonte
+     quebrada em vez de layout apertado. Fixando a largura, o excesso vira um
+     transbordo honesto, que o breakpoint resolve. */
+  flex: none; white-space: nowrap;
   transition: color 0.2s var(--saida), background 0.2s var(--saida);
 }
 .menu-link:hover { background: var(--superficie-2); color: var(--tinta); }
@@ -230,10 +250,17 @@ a:hover { color: var(--acento-forte); }
   color: #fff; box-shadow: var(--brilho-violeta);
 }
 /* Ponta "crescimento" do espectro: reservada para conversão. */
+/* `--tinta-sobre-lima` porque o lima muda de claridade entre os temas: no
+   escuro ele é #a6ff4d e pede texto escuro; no claro virou #3f6b0d, verde
+   escuro, e texto escuro sobre ele dá 3,11 de contraste. Fixar a cor do texto
+   aqui obrigaria um dos dois temas a ficar ilegível. */
 .btn.sucesso {
-  background: var(--lima); border-color: var(--lima); color: #0b0a12; font-weight: 600;
+  background: var(--lima); border-color: var(--lima);
+  color: var(--tinta-sobre-lima); font-weight: 600;
 }
-.btn.sucesso:hover:not(:disabled) { color: #0b0a12; box-shadow: var(--brilho-lima); }
+.btn.sucesso:hover:not(:disabled) {
+  color: var(--tinta-sobre-lima); box-shadow: var(--brilho-lima);
+}
 .btn.pequeno { padding: 5px 13px; font-size: 12px; }
 
 .btn-texto {
@@ -293,7 +320,7 @@ textarea { resize: vertical; line-height: 1.55; }
 
 /* ----------------------------------------------------------- indicadores */
 .indicadores {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(198px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(198px, 100%), 1fr));
   gap: 14px; margin-bottom: 14px;
 }
 .indicador {
@@ -332,7 +359,14 @@ textarea { resize: vertical; line-height: 1.55; }
   overflow-x: auto; border: 1px solid var(--linha);
   border-radius: var(--raio); background: var(--superficie); box-shadow: var(--elev-1);
 }
-table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 560px; }
+/* O `min-width: 560px` que morava aqui foi escopado para `.tabela-rolavel`.
+   Global, ele obrigava TODA tabela a ter 560px — inclusive as de três colunas
+   curtas do checkout e do console, que então estouravam a tela do celular em
+   230–260px. É a segunda vez que esta regra vaza para onde não devia: a
+   primeira foi na tabela da landing. Largura mínima só faz sentido dentro de
+   um contêiner que sabe rolar. */
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.tabela-rolavel table { min-width: 560px; }
 caption {
   text-align: left; font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.2em;
@@ -463,7 +497,7 @@ code {
 
 /* --------------------------------------------------------------- ofertas */
 .grade-ofertas {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(244px, 1fr)); gap: 13px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(244px, 100%), 1fr)); gap: 13px;
 }
 .cartao-oferta {
   background: var(--superficie); border: 1px solid var(--linha);
@@ -478,7 +512,7 @@ code {
 
 /* --------------------------------------------------------------- pressão */
 .grade-pressao {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 14px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(272px, 100%), 1fr)); gap: 14px;
 }
 .cartao-pressao {
   background: var(--superficie); border: 1px solid var(--linha);
@@ -497,7 +531,7 @@ code {
 
 /* ---------------------------------------------------------------- planos */
 .plans {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(212px, 100%), 1fr));
   gap: 13px; margin: 24px 0;
 }
 .plan {
@@ -533,10 +567,15 @@ code {
    troca para violeta.
    ========================================================================== */
 .console .topo { border-bottom: 2px solid var(--violeta); }
-.console .marca-sub { color: var(--violeta); }
+/* `--violeta-forte` e não `--violeta`: medido, o primeiro dá 3,59 de
+   contraste sobre a superfície escura e o mínimo da WCAG para texto pequeno é
+   4,5. O forte dá 4,72. A cor continua marcando o console — o que muda é ela
+   ficar legível para quem não tem visão perfeita, que num texto de 9px é
+   praticamente todo mundo. */
+.console .marca-sub { color: var(--violeta-forte); }
 
 .graficos {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(272px, 100%), 1fr));
   gap: 14px; margin-top: 8px;
 }
 .grafico {
@@ -561,12 +600,17 @@ code {
 .grafico footer b { color: var(--tinta); font-variant-numeric: tabular-nums; }
 .grafico-nota { font-size: 12px; color: var(--apagado); margin: 9px 0 0; line-height: 1.45; }
 
+/* `min(310px, 100%)` e não `310px` seco: uma faixa de grade com mínimo maior
+   que o espaço disponível não encolhe — ela vaza. Num iPhone SE (320px, menos
+   32 de respiro = 288 úteis) esta grade empurrava 6px para fora da tela e
+   criava rolagem lateral na página inteira. O `min()` deixa a faixa ceder até
+   a largura do contêiner. Aplicado a todas as grades pelo mesmo motivo. */
 .duas-colunas {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); gap: 14px;
 }
 
 .parametros {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 14px; margin: 22px 0 8px;
 }
 .parametro {
@@ -596,11 +640,432 @@ code {
 }
 
 @media (max-width: 700px) {
-  .topo-conteudo { height: auto; padding: 12px 18px; flex-wrap: wrap; gap: 12px; }
-  .conteudo { padding: 24px 18px 64px; }
+  /* O `flex-wrap: wrap` que existia aqui foi removido: era ele que deixava a
+     barra virar uma pilha de quatro linhas em vez de trocar de forma. O
+     tratamento estreito agora está na seção NAVEGAÇÃO RESPONSIVA, em 900px. */
   .busca { margin-left: 0; max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+}
+
+/* =============================================================================
+   COBRANÇA
+   Primeira versão: reaproveita cartão, alerta e tabela do resto do app. O que
+   ganha estilo próprio é só o que não existia — a tabela de linhas do pedido e
+   a lista de consequências, que precisam de hierarquia porque são justamente o
+   que o cliente lê antes de autorizar a cobrança.
+   ============================================================================= */
+.checkout-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.checkout-linhas { width: 100%; border-collapse: collapse; margin: 4px 0 14px; }
+.checkout-linhas td,
+.checkout-linhas th { padding: 9px 0; text-align: left; }
+.checkout-linhas td { color: var(--apagado); border-bottom: 1px solid var(--linha); }
+.checkout-linhas .num { text-align: right; font-variant-numeric: tabular-nums; }
+.checkout-linhas tfoot th {
+  padding-top: 14px;
+  font-size: 1rem;
+  border-top: 1px solid var(--linha-forte);
+}
+.checkout-total { font-family: "Instrument Serif", Georgia, serif; font-size: 1.6rem; }
+
+.checkout-recorrencia {
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border: 1px solid var(--linha-forte);
+  border-radius: 10px;
+  color: var(--apagado);
+  font-size: 0.9rem;
+}
+
+.checkout-acoes { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.checkout-acoes.coluna { flex-direction: column; align-items: stretch; }
+
+.checkout-consequencias { margin: 0; padding-left: 18px; display: grid; gap: 11px; }
+.checkout-consequencias li { color: var(--apagado); line-height: 1.55; }
+.checkout-consequencias strong { color: var(--tinta); }
+
+.cobranca-dados { margin: 0; display: grid; gap: 2px; }
+.cobranca-dados > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--linha);
+}
+.cobranca-dados dt { color: var(--apagado); }
+.cobranca-dados dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.cobranca-dados .cobranca-total { border-bottom: 1px solid var(--linha-forte); }
+.cobranca-dados .cobranca-total dd { font-size: 1.15rem; }
+
+.separador { border: 0; border-top: 1px solid var(--linha); margin: 20px 0; }
+
+/* Não usa `.linha-formulario`: aquela classe é para linha de campo (rótulo +
+   entrada) e traz `max-width: 480px` com filhos que esticam. Aplicada aqui, o
+   checkbox virava uma barra de 285×13px e o texto ao lado vazava 34px da tela
+   de um celular — medido em 375px. */
+.cancelar-confirma {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--apagado);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.cancelar-confirma input[type="checkbox"] {
+  /* Tamanho explícito: sem ele o checkbox herda o `flex: 1` dos campos de
+     texto e estica pela linha inteira. */
+  flex: none;
+  width: 20px; height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--acento);
+}
+/* `min-width: 0` porque item de flex não encolhe abaixo do conteúdo por
+   padrão — é o que fazia a frase furar a borda em vez de quebrar linha. */
+.cancelar-confirma span { min-width: 0; }
+
+@media (max-width: 900px) {
+  .checkout-grade { grid-template-columns: 1fr; }
+}
+
+/* =============================================================================
+   NAVEGAÇÃO RESPONSIVA
+   
+   A versão anterior era uma barra só com `flex-wrap`, e envolver não é
+   adaptar. Os sintomas medidos antes desta seção existir:
+   
+     1024px → menu em 3 linhas dentro de um contêiner de 66px fixos; os links
+              vazavam por cima da borda inferior
+      375px → barra com 192px de 812 (23% da tela), 4 linhas de menu,
+              "Conta de Demonstração" quebrando em duas, e o botão Sair
+              FORA da viewport — inalcançável
+      375px → console admin com 320px de 812 (40% da tela)
+   
+   A correção troca a forma da navegação por faixa, em vez de encolher a
+   mesma forma até quebrar.
+   ============================================================================= */
+
+/* Visível só para leitor de tela. O botão de conta é um ícone; sem isto ele
+   é um botão sem nome acessível. */
+.sr-apenas {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------- desktop */
+/* Irmão de `.usuario` (a raiz do MenuConta), e não mais filho dele: o menu
+   virou componente próprio. `flex: none` para não ceder espaço — quem cede é
+   o menu de navegação, sempre. `margin-left: auto` empurra os dois blocos de
+   conta para a direita. */
+.conta-desktop { display: flex; align-items: center; gap: 10px; flex: none; margin-left: auto; }
+/* Com `.conta-desktop` visível, o botão de ícone some e sua raiz não deve
+   ocupar espaço nem empurrar nada. */
+.usuario:empty { display: none; }
+.botao-conta { display: none; }
+.barra-inferior { display: none; }
+
+/* Tira rolável do console. Em telas largas ela é uma fila comum; quando
+   aperta, rola em vez de envolver. */
+.menu-tira { overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.menu-tira::-webkit-scrollbar { display: none; }
+.menu-tira .menu-link { flex: none; scroll-snap-align: center; }
+
+/* ------------------------------------------------------- menu de conta */
+.usuario { position: relative; }
+
+.botao-conta {
+  align-items: center; justify-content: center;
+  /* 44px é o alvo de toque recomendado. O ícone tem 20px; o resto é área
+     clicável — tamanho de toque não é tamanho aparente. */
+  width: 44px; height: 44px;
+  border-radius: 999px; border: 1px solid var(--linha);
+  background: var(--superficie-2); color: var(--apagado); cursor: pointer;
+  transition: color 0.2s var(--saida), border-color 0.2s var(--saida);
+}
+.botao-conta:hover, .botao-conta.aberto { color: var(--tinta); border-color: var(--linha-forte); }
+
+.menu-conta {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 40;
+  min-width: 230px; max-width: min(280px, calc(100vw - 32px));
+  background: var(--superficie); border: 1px solid var(--linha-forte);
+  border-radius: var(--raio); box-shadow: var(--elev-2);
+  padding: 6px; display: flex; flex-direction: column;
+}
+.menu-conta-topo {
+  padding: 10px 12px 12px; margin-bottom: 4px;
+  border-bottom: 1px solid var(--linha);
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.menu-conta-topo strong { font-size: 14px; }
+.menu-conta-topo span {
+  font-size: 12px; color: var(--apagado);
+  /* O e-mail é o texto mais longo do menu e o único que pode ser gigante.
+     Sem isto ele estica o painel e estoura a tela num aparelho estreito. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.menu-conta-item {
+  display: flex; align-items: center; min-height: 44px; padding: 0 12px;
+  border-radius: var(--raio-p); border: 0; background: none; cursor: pointer;
+  color: var(--apagado); font: inherit; font-size: 14px; text-align: left;
+  text-decoration: none; width: 100%;
+  transition: background 0.16s var(--saida), color 0.16s var(--saida);
+}
+.menu-conta-item:hover { background: var(--superficie-2); color: var(--tinta); }
+.menu-conta-item.ativo { background: var(--acento-suave); color: var(--acento); }
+.menu-conta-item.sair { color: var(--perigo); margin-top: 4px; border-top: 1px solid var(--linha); }
+
+/* ------------------------------------------------------------ intermediário
+   Entre 900 e 1150 os links de trabalho ainda cabem no topo, mas somados ao
+   bloco de conta (Perfil, Plano, Assinatura, Console, nome, Sair) estouram a
+   linha. Recolher só o bloco de conta preserva a navegação principal onde ela
+   é mais útil e resolve o aperto — em vez de jogar um laptop de 1024px na
+   barra inferior de celular. */
+@media (max-width: 1150px) {
+  .conta-desktop { display: none; }
+  .botao-conta { display: flex; }
+  .topo-conteudo { gap: 16px; }
+}
+
+/* ----------------------------------------------------------------- estreito
+   900px e não 700: a quebra medida começa em 1024, e o console admin com seis
+   links aperta antes disso. O breakpoint acompanha o conteúdo, não o nome de
+   um aparelho. */
+@media (max-width: 900px) {
+  .topo-conteudo { gap: 14px; padding: 0 16px; height: 58px; }
+
+  /* Os links de trabalho descem para a barra inferior. Mantê-los nos dois
+     lugares daria dois caminhos para o mesmo destino. */
+  .menu-desktop { display: none; }
+  .conta-desktop { display: none; }
+  .botao-conta { display: flex; }
+
+  /* Com `.conta-desktop` escondido, quem vai para a direita é o menu. */
+  .usuario { margin-left: auto; }
+
+  .menu-tira .menu-link { padding: 6px 12px; font-size: 13px; }
+  .marca-nome { font-size: 1.05rem; }
+  /* 9px e não 8,5: abaixo disso o traço da IBM Plex Mono some em tela de
+     baixa densidade, e o espaçamento entre letras que dá o ar de etiqueta
+     piora a leitura em vez de ajudar. */
+  .marca-sub { font-size: 9px; letter-spacing: 0.16em; }
+
+  /* Console: a tira ocupa a linha inteira sob a marca.
+     O aperto aqui é medido, não estético: em 320×568 (iPhone SE, tela curta)
+     as duas linhas somavam 120px — 21% da altura útil. Com o respiro reduzido
+     ficam em 104px, 18%. Numa tela curta, cada linha de cabeçalho é uma linha
+     de conteúdo que a pessoa não vê. */
+  .console .topo-conteudo { flex-wrap: wrap; height: auto; padding: 7px 16px 3px; }
+  .console .menu-tira {
+    order: 3; width: 100%; flex-basis: 100%;
+    margin: 0 -16px; padding: 0 16px 2px;
+    /* O gradiente na borda direita avisa que há mais conteúdo para o lado —
+       sem ele, uma tira cortada parece uma lista que acabou. */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+
+  .barra-inferior {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed; inset-inline: 0; bottom: 0; z-index: 30;
+    background: var(--superficie);
+    border-top: 1px solid var(--linha-forte);
+    /* Respeita o indicador de home do iPhone; sem isto o último item fica
+       sob a faixa do sistema e não recebe o toque. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .barra-inferior-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; min-height: 58px; padding: 6px 2px;
+    text-decoration: none; color: var(--apagado);
+    font-size: 10.5px; font-weight: 500; letter-spacing: 0.01em;
+    transition: color 0.18s var(--saida);
+  }
+  .barra-inferior-icone {
+    display: flex; align-items: center; justify-content: center;
+    width: 46px; height: 26px; border-radius: 999px;
+    transition: background 0.18s var(--saida), color 0.18s var(--saida);
+  }
+  .barra-inferior-item.ativo { color: var(--tinta); }
+  .barra-inferior-item.ativo .barra-inferior-icone {
+    background: var(--acento-suave); color: var(--acento);
+  }
+
+  /* Espaço para a barra não cobrir o fim da página. É a altura dela mais a
+     área segura — um `padding` fixo erraria em aparelho com notch. */
+  .conteudo { padding: 22px 16px calc(84px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* O console não tem barra inferior (ver LayoutAdmin.tsx), então não precisa
+   do espaço reservado para ela. */
+@media (max-width: 900px) {
+  .console .conteudo { padding-bottom: 56px; }
+}
+
+/* ------------------------------------------------------------------ toque
+   Alvos pequenos demais foram medidos em /territorios (8), /plano (7) e
+   /carteira (6). O `min-height` sobe o alvo sem inchar o desenho, porque o
+   ganho vai para o padding. */
+@media (pointer: coarse) {
+  .btn, .btn-texto { min-height: 40px; }
+  .btn.pequeno { min-height: 36px; padding-inline: 15px; }
+
+  /* Os filtros da carteira tinham 28px de altura e o × dos chips, 22×22 —
+     medidos. O dedo médio cobre cerca de 45px; abaixo de ~32 a pessoa erra o
+     alvo e clica no vizinho, que aqui significa aplicar o filtro errado ou
+     remover a cidade errada. */
+  .chip { min-height: 34px; display: inline-flex; align-items: center; }
+  .chip-removivel { min-height: 34px; }
+  .chip-removivel button, .chip button {
+    min-width: 32px; min-height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-inferior-item,
+  .barra-inferior-icone,
+  .botao-conta,
+  .menu-conta-item { transition: none; }
+}
+
+/* Aviso de e-mail pendente. Fica no topo do conteúdo, não numa tela cheia:
+   a confirmação só trava a alocação, e bloquear tudo impediria a pessoa de
+   configurar território enquanto o e-mail não chega. */
+.aviso-verificacao {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.aviso-verificacao code { font-size: 0.92em; }
+.aviso-verificacao .ajuda { margin-top: 6px; }
+.aviso-verificacao .btn { flex: none; }
+
+/* =============================================================================
+   MARCA
+   Tipográfica e EM LINHA, seguindo o portfólio: nome em serifa, um acento em
+   cor, descritor em mono ao lado. Empilhar os dois num bloco de 26px espremia
+   duas linhas no espaço de uma e transformava o descritor em ruído cinza.
+   ============================================================================= */
+.marca {
+  display: inline-flex; align-items: baseline; gap: 10px;
+  min-width: 0; flex: none;
+}
+.marca-nome {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400; font-size: 1.32rem; letter-spacing: -0.015em;
+  color: var(--tinta); white-space: nowrap;
+}
+/* O acento: um caractere só, que some sem deixar buraco quando o nome mudar. */
+.marca-ponto { color: var(--acento); }
+.marca-logo { height: 1em; width: auto; vertical-align: baseline; }
+
+.marca-sub {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.24em;
+  color: var(--apagado); white-space: nowrap;
+  transition: color 0.24s var(--saida);
+}
+/* O descritor acende junto com o nome ao apontar — é assim que os dois lêem
+   como uma coisa só, e não como texto ao lado de um link. */
+.marca-botao:hover .marca-sub { color: var(--acento); }
+
+/* Abaixo de 560px sobra só o nome. Espremer o descritor até 8px para caber
+   não o torna legível: torna-o um borrão que ainda ocupa espaço. */
+@media (max-width: 560px) {
+  .marca-sub { display: none; }
+}
+
+.marca-botao {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; text-align: left; border-radius: var(--raio-p);
+  transition: opacity 0.2s var(--saida), transform 0.2s var(--saida);
+}
+.marca-botao:hover { opacity: 0.9; }
+/* Afunda 1px em vez de encolher: encolher move o texto e o olho lê como
+   instabilidade. */
+.marca-botao:active { transform: translateY(1px); }
+.marca-botao:focus-visible { outline: 2px solid var(--acento); outline-offset: 5px; }
+
+/* Telas de acesso: empilhado e centrado, porque ali a marca é o cabeçalho da
+   página e não um item de barra. */
+.marca-acesso, .marca-rodape {
+  flex-direction: column; align-items: flex-start; gap: 7px;
+}
+.marca-acesso { align-items: center; margin-bottom: 22px; }
+.marca-acesso .marca-nome { font-size: 1.85rem; }
+.marca-rodape .marca-nome { font-size: 1.5rem; }
+
+/* Filete entre nome e descritor no rodapé — o mesmo recurso do filete dourado
+   do Marcelo Imóveis: separa sem precisar de espaço em branco. */
+.marca-filete {
+  display: block; width: 46px; height: 1px;
+  background: var(--acento); opacity: 0.65;
+}
+
+/* ---------------------------------------------------- micro-interações */
+/* O realce vem do deslocamento, não da troca de cor: trocar cor num item que
+   já usa cor com significado borra o próprio significado. */
+.btn { transition: transform 0.18s var(--saida), background 0.2s var(--saida),
+                   border-color 0.2s var(--saida), box-shadow 0.2s var(--saida); }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.indicador { transition: transform 0.24s var(--saida), border-color 0.24s var(--saida); }
+.indicador:hover { transform: translateY(-2px); border-color: var(--linha-forte); }
+
+.cartao-oferta, .cartao-pressao {
+  transition: transform 0.24s var(--saida), border-color 0.24s var(--saida);
+}
+.cartao-oferta:hover, .cartao-pressao:hover {
+  transform: translateY(-2px); border-color: var(--linha-forte);
+}
+
+/* Linha de tabela ao passar o ponteiro: o alvo de clique fica óbvio numa
+   lista longa, que é onde se erra a linha. */
+tbody tr { transition: background 0.16s var(--saida); }
+.tabela-rolavel tbody tr:hover { background: var(--superficie-2); }
+
+/* A barra de progresso da carteira anima ao mudar — ver o número saltar não
+   diz que ele mudou; ver a barra crescer, diz. */
+.barra-preenchida { transition: width 0.5s var(--saida); }
+
+/* Menu de conta: abre descendo, não aparecendo. O movimento diz de onde ele
+   veio, e de onde vem é o botão que foi clicado. */
+@keyframes menu-desce {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.menu-conta { animation: menu-desce 0.18s var(--saida) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .indicador, .cartao-oferta, .cartao-pressao, tbody tr,
+  .barra-preenchida, .marca-botao { transition: none; }
+  .btn:hover:not(:disabled), .indicador:hover,
+  .cartao-oferta:hover, .cartao-pressao:hover, .marca-botao:active { transform: none; }
+  .menu-conta { animation: none; }
+}
+
+
+/* -----------------------------------------------------------------------------
+   Ajuste estreito da marca — no FIM do arquivo de propósito.
+   A primeira tentativa ficou dentro do `@media (max-width: 900px)` lá em cima,
+   e perdeu para a regra base `.marca-simbolo` que é declarada depois: mesma
+   especificidade, e aí quem decide é a ordem de fonte. Media query não
+   aumenta especificidade — é um engano fácil e silencioso.
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  /* O símbolo entrou depois da medição que fixou o teto de altura do console,
+     e sozinho empurrou a barra de 104 para 120px de 568 — acima do limite de
+     20%. Em 20px cabe, e num aparelho desse tamanho ninguém percebe. */
+  .marca-simbolo { width: 20px; height: 20px; }
+  .console .topo-conteudo { gap: 10px; }
+  .console .marca-nome { font-size: 0.98rem; }
 }
