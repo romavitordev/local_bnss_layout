@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   OPOSTO, ROTULO_TEMA, aplicarTema, guardarTema, lerTema, temaDoSistema,
   type Tema,
@@ -26,9 +26,15 @@ import {
 export default function BotaoTema({ compacto = false }: { compacto?: boolean }) {
   const [escolha, setEscolha] = useState<Tema | null>(() => lerTema());
   const [doSistema, setDoSistema] = useState<Tema>(() => temaDoSistema());
+  // `useRef` e não estado: só serve para distinguir a primeira execução do
+  // efeito das seguintes, e mudá-lo não deve provocar renderização.
+  const montado = useRef(false);
 
   useEffect(() => {
-    aplicarTema(escolha);
+    // Suave só a partir da segunda vez. Na montagem a página está entrando, e
+    // animar ali a faria cruzar consigo mesma a cada carregamento.
+    aplicarTema(escolha, montado.current);
+    montado.current = true;
   }, [escolha]);
 
   useEffect(() => {

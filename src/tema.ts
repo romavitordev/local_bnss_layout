@@ -58,11 +58,47 @@ export function lerTema(): Tema | null {
   }
 }
 
+/** Quanto dura o cruzamento entre os dois temas. Ver `suavizarTroca`. */
+export const DURACAO_TROCA = 260;
+
+/**
+ * Liga as transições de cor por um instante, só durante a troca.
+ *
+ * A troca acontece porque um punhado de variáveis CSS muda de valor de uma vez,
+ * e variável CSS não anima sozinha — o resultado é a página inteira pulando de
+ * um tema para o outro num quadro só.
+ *
+ * A saída é uma classe temporária que declara transição de cor em tudo. Ela é
+ * pesada de propósito e por isso **só existe durante o clique**: deixá-la
+ * permanente faria cada abertura de menu e cada `:hover` arrastar cor, e —
+ * pior — a primeira pintura da página animaria do branco para o tema, que é o
+ * clarão que o script do `index.html` existe para evitar.
+ *
+ * Nada mais é animado: posição, tamanho e opacidade ficam de fora. Numa troca
+ * de tema o que muda é cor; animar geometria junto produziria um solavanco em
+ * vez de um cruzamento.
+ */
+function suavizarTroca(): void {
+  const raiz = document.documentElement;
+  try {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  } catch {
+    return;
+  }
+  raiz.classList.add("trocando-tema");
+  window.setTimeout(() => raiz.classList.remove("trocando-tema"), DURACAO_TROCA);
+}
+
 /**
  * Aplica uma escolha explícita, ou devolve o comando ao sistema com `null`.
+ *
+ * `suave` é falso por padrão porque a montagem do componente também chama esta
+ * função: animar ali faria a página entrar cruzando consigo mesma a cada
+ * carregamento. Só o clique pede a suavização.
  */
-export function aplicarTema(tema: Tema | null): void {
+export function aplicarTema(tema: Tema | null, suave = false): void {
   const raiz = document.documentElement;
+  if (suave) suavizarTroca();
 
   if (tema === null) {
     // Remover o atributo, e não escrever um valor neutro: é a AUSÊNCIA dele

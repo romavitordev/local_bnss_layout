@@ -1200,3 +1200,45 @@ tbody tr { transition: background 0.16s var(--saida); }
      assim justamente porque cabe, então a barra nunca deve aparecer. */
   .tabela-nao-empilha { overflow-x: auto; }
 }
+
+/* =============================================================================
+   TROCA DE TEMA — o cruzamento, e por que ele é temporário
+   =============================================================================
+   O tema muda porque um punhado de variáveis CSS troca de valor de uma vez, e
+   variável CSS não anima sozinha: sem isto a página pula de um tema para o
+   outro num quadro só.
+
+   A classe é posta pelo clique e retirada 260ms depois (ver src/tema.ts).
+   Permanente ela seria um problema, não uma melhoria: cada `:hover` passaria a
+   arrastar cor, e a PRIMEIRA PINTURA animaria do branco para o tema — que é
+   exatamente o clarão que o script do `index.html` existe para evitar.
+
+   Só cor é animada. Numa troca de tema geometria não muda; animá-la junto
+   produziria um solavanco em vez de um cruzamento. */
+html.trocando-tema,
+html.trocando-tema *,
+html.trocando-tema *::before,
+html.trocando-tema *::after {
+  transition:
+    background-color 260ms ease,
+    border-color 260ms ease,
+    color 260ms ease,
+    fill 260ms ease,
+    stroke 260ms ease,
+    box-shadow 260ms ease,
+    outline-color 260ms ease !important;
+  /* Atrasos de outras regras adiariam o cruzamento de partes da tela, e ela
+     terminaria de trocar em pedaços. */
+  transition-delay: 0s !important;
+}
+
+/* Quem pede menos movimento não recebe nem este. A classe nem chega a ser
+   posta (ver `suavizarTroca`), e a regra abaixo é o cinto e suspensório. */
+@media (prefers-reduced-motion: reduce) {
+  html.trocando-tema,
+  html.trocando-tema *,
+  html.trocando-tema *::before,
+  html.trocando-tema *::after {
+    transition: none !important;
+  }
+}
