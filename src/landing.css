@@ -24,6 +24,17 @@
   --violeta-claro: #a58bff;
   --ciano: #00d4c8;
   --lima: #a6ff4d;
+  --lima-hover: #b6ff6b;
+  --violeta-hover: #5c3aeb;
+  /* Texto sobre o preenchimento lima. No escuro o lima é claro e pede tinta
+     escura; no claro ele vira verde-musgo e pede tinta branca. */
+  --sobre-lima: #0b0a12;
+  --vidro: rgba(11, 10, 18, 0.82);
+  --marca-dagua: #6b6784;
+  --erro-lp: #ff6b6b;
+  --erro-lp-borda: #ff5c5c;
+  --erro-lp-texto: #ff9b9b;
+  --erro-lp-fundo: rgba(255, 92, 92, 0.1);
   --elev-1: 0 1px 0 0 rgba(236, 234, 245, 0.05) inset,
             0 8px 24px -16px rgba(0, 0, 0, 0.8);
   --elev-2: 0 1px 0 0 rgba(236, 234, 245, 0.06) inset,
@@ -68,7 +79,7 @@
               backdrop-filter 0.35s var(--saida);
 }
 .lp-topo.rolou {
-  background: rgba(11, 10, 18, 0.82);
+  background: var(--vidro);
   backdrop-filter: blur(14px) saturate(140%);
   border-bottom-color: var(--linha-lp);
 }
@@ -121,21 +132,21 @@
   flex: 1 1 190px; background: var(--nevoa); border: 1px solid var(--linha-lp);
   color: var(--luz); padding: 13px 15px; border-radius: 9px; font-size: 15px;
 }
-.lp-captura input::placeholder { color: #6b6784; }
+.lp-captura input::placeholder { color: var(--marca-dagua); }
 .lp-captura input:focus { border-color: var(--ciano); }
 .lp-captura .btn {
   background: var(--violeta); border: 1px solid var(--violeta); color: #fff;
   padding: 13px 24px; border-radius: 9px; font-weight: 600; white-space: nowrap;
   box-shadow: 0 14px 40px -12px rgba(109, 74, 255, 0.5);
 }
-.lp-captura .btn:hover:not(:disabled) { background: #5c3aeb; border-color: #5c3aeb; }
+.lp-captura .btn:hover:not(:disabled) { background: var(--violeta-hover); border-color: var(--violeta-hover); }
 
 .lp .alerta { border-radius: 9px; }
 .lp .alerta.info {
   background: rgba(0, 212, 200, 0.1); border-color: var(--ciano); color: var(--ciano);
 }
 .lp .alerta.erro {
-  background: rgba(255, 92, 92, 0.1); border-color: #ff5c5c; color: #ff9b9b;
+  background: var(--erro-lp-fundo); border-color: var(--erro-lp-borda); color: var(--erro-lp-texto);
 }
 
 .lp-nota { font-size: 14px; color: var(--bruma); margin: 18px 0 0; }
@@ -180,7 +191,7 @@
 .lp-tabela td { border-bottom: 1px solid var(--linha-lp); color: var(--luz); padding: 14px 16px; }
 .lp-tabela tbody tr:last-child td { border-bottom: 0; }
 .lp-tabela .bom { color: var(--lima); font-weight: 700; }
-.lp-tabela .ruim { color: #ff6b6b; font-weight: 700; }
+.lp-tabela .ruim { color: var(--erro-lp); font-weight: 700; }
 
 /* ------------------------------------------------------------------ passos */
 .lp-passos {
@@ -237,10 +248,10 @@
 .lp-cta {
   display: inline-block; margin-top: 14px; padding: 15px 34px; font-size: 15px;
   text-decoration: none; background: var(--lima); border: 1px solid var(--lima);
-  color: #0b0a12; font-weight: 600; border-radius: 10px;
+  color: var(--sobre-lima); font-weight: 600; border-radius: 10px;
   box-shadow: 0 14px 40px -14px rgba(166, 255, 77, 0.4);
 }
-.lp-cta:hover { background: #b6ff6b; border-color: #b6ff6b; }
+.lp-cta:hover { background: var(--lima-hover); border-color: var(--lima-hover); }
 
 /* ------------------------------------------------------------------ rodapé */
 .lp-rodape { border-top: 1px solid var(--linha-lp); background: var(--nevoa); padding: 56px 0 40px; }
@@ -335,3 +346,89 @@
   .lp-hero { padding: 128px 0 64px; }
   .lp-secao { padding: 60px 0; }
 }
+
+/* ==========================================================================
+   LANDING NO TEMA CLARO
+
+   A landing nasceu escura por decisão de identidade, e continua sendo esse o
+   padrão — o comentário do topo explica por quê. O que mudou é que agora
+   existe um botão de tema no produto, e um botão que não muda a página em que
+   está é pior do que botão nenhum: a pessoa clica, vê o ícone virar sol, e a
+   tela continua preta.
+
+   Só os TOKENS são redefinidos aqui; nenhuma regra de componente é duplicada.
+   Foi para isso que as cores fixas viraram variáveis logo acima.
+
+   Os valores não são inventados: são os mesmos do tema claro do aplicativo
+   (`estilos.css`), que já foram medidos contra a WCAG depois de uma auditoria
+   achar seis falhas de contraste — todas no claro, justamente porque ninguém o
+   media. Reaproveitá-los evita repetir o erro numa segunda paleta.
+
+   Os dois blocos existem porque são gatilhos diferentes: a media query atende
+   quem nunca escolheu e usa o sistema no claro; o `[data-theme="light"]`
+   atende quem escolheu no botão. Sem o segundo, escolher "claro" num sistema
+   escuro não faria nada.
+   ========================================================================== */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .lp {
+    --abismo: #f7f7fa;
+    --nevoa: #ffffff;
+    --linha-lp: #e2e1ea;
+    --linha-forte: #cdcbd8;
+    --luz: #16141f;
+    --tinta-2: #3d3a4d;
+    --bruma: #6b6784;
+    --violeta: #5b39e8;
+    --violeta-claro: #4a2bd4;
+    --violeta-hover: #4a2bd4;
+    --ciano: #07665f;
+    --lima: #3f6b0d;
+    --lima-hover: #355a0b;
+    /* Invertido: o lima do claro é verde-musgo escuro, e tinta escura sobre
+       ele seria ilegível. */
+    --sobre-lima: #ffffff;
+    --vidro: rgba(247, 247, 250, 0.85);
+    --marca-dagua: #6b6784;
+    --erro-lp: #b02b26;
+    --erro-lp-borda: #b02b26;
+    --erro-lp-texto: #8e211d;
+    --erro-lp-fundo: rgba(176, 43, 38, 0.08);
+    --acento-suave: rgba(7, 102, 95, 0.1);
+    --elev-1: 0 1px 2px rgba(22, 20, 31, 0.04), 0 8px 24px -18px rgba(22, 20, 31, 0.24);
+    --elev-2: 0 1px 2px rgba(22, 20, 31, 0.05), 0 18px 44px -26px rgba(22, 20, 31, 0.3);
+  }
+}
+
+:root[data-theme="light"] .lp {
+  --abismo: #f7f7fa;
+  --nevoa: #ffffff;
+  --linha-lp: #e2e1ea;
+  --linha-forte: #cdcbd8;
+  --luz: #16141f;
+  --tinta-2: #3d3a4d;
+  --bruma: #6b6784;
+  --violeta: #5b39e8;
+  --violeta-claro: #4a2bd4;
+  --violeta-hover: #4a2bd4;
+  --ciano: #07665f;
+  --lima: #3f6b0d;
+  --lima-hover: #355a0b;
+  --sobre-lima: #ffffff;
+  --vidro: rgba(247, 247, 250, 0.85);
+  --marca-dagua: #6b6784;
+  --erro-lp: #b02b26;
+  --erro-lp-borda: #b02b26;
+  --erro-lp-texto: #8e211d;
+  --erro-lp-fundo: rgba(176, 43, 38, 0.08);
+  --acento-suave: rgba(7, 102, 95, 0.1);
+  --elev-1: 0 1px 2px rgba(22, 20, 31, 0.04), 0 8px 24px -18px rgba(22, 20, 31, 0.24);
+  --elev-2: 0 1px 2px rgba(22, 20, 31, 0.05), 0 18px 44px -26px rgba(22, 20, 31, 0.3);
+}
+
+/* O brilho violeta do hero é desenhado para fundo escuro: sobre papel claro
+   ele vira uma mancha lilás. Reduzido, não removido — a peça é a assinatura
+   visual da seção. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .lp-hero::before { opacity: 0.35; }
+}
+:root[data-theme="light"] .lp-hero::before { opacity: 0.35; }

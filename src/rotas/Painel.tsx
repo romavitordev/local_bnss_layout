@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ErroApi, type Ocupacao, type Uso } from "../api/cliente";
+import Tabela from "../componentes/Tabela";
 
 export default function Painel() {
   const [uso, setUso] = useState<Uso | null>(null);
@@ -121,7 +122,7 @@ export default function Painel() {
           {pressao.length === 0 ? (
             <p className="vazio">Nenhum território configurado.</p>
           ) : (
-            <div className="tabela-rolavel">
+            <Tabela>
               <table>
                 <thead>
                   <tr>
@@ -146,7 +147,7 @@ export default function Painel() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Tabela>
           )}
         </>
       )}

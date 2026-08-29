@@ -4,6 +4,7 @@ import { api, ErroApi, type Cobertura, type Plano } from "../api/cliente";
 import Marca from "../componentes/Marca";
 import { DADOS_VITRINE, MARCA } from "../marca";
 import "../landing.css";
+import BotaoTema from "../componentes/BotaoTema";
 
 /**
  * As seções navegáveis, na ordem em que aparecem.
@@ -195,6 +196,7 @@ export default function Landing() {
             <Link to="/entrar" className="lp-entrar">
               Entrar
             </Link>
+            <BotaoTema compacto />
           </nav>
         </div>
       </header>

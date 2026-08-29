@@ -4,6 +4,7 @@ import {
   api, ErroApi, type AssinaturaDetalhe, type Fatura,
 } from "../api/cliente";
 import { reais } from "../api/dinheiro";
+import Tabela from "../componentes/Tabela";
 
 /**
  * Central de cobrança: onde a assinatura é administrada, não escolhida.
@@ -197,7 +198,7 @@ export default function Assinatura() {
           {faturas.length === 0 ? (
             <p className="vazio">Nenhuma cobrança ainda.</p>
           ) : (
-            <div className="tabela-rolavel">
+            <Tabela>
               <table>
                 <thead>
                   <tr>
@@ -236,7 +237,7 @@ export default function Assinatura() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Tabela>
           )}
           <p className="ajuda">
             O comprovante é emitido pelo provedor de pagamento. Documento fiscal

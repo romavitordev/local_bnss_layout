@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   api, ErroApi, type EventoAuditoria, type Parametro,
 } from "../../api/cliente";
+import Tabela from "../../componentes/Tabela";
 
 /**
  * Ajuste dos parâmetros do motor.
@@ -157,7 +158,7 @@ export default function Plataforma() {
       {eventos.length === 0 ? (
         <p className="vazio">Nenhum evento registrado.</p>
       ) : (
-        <div className="tabela-rolavel">
+        <Tabela>
           <table>
             <thead>
               <tr>
@@ -182,7 +183,7 @@ export default function Plataforma() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Tabela>
       )}
     </section>
   );

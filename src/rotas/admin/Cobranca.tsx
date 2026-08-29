@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ErroApi, type VisaoCobranca } from "../../api/cliente";
 import { reais } from "../../api/dinheiro";
+import Tabela from "../../componentes/Tabela";
 
 /**
  * O dinheiro, do lado de dentro.
@@ -96,7 +97,7 @@ export default function Cobranca() {
             Cartão vencido e limite estourado são a maioria e se resolvem com um
             contato.
           </div>
-          <div className="tabela-rolavel">
+          <Tabela>
             <table>
               <thead>
                 <tr>
@@ -123,7 +124,7 @@ export default function Cobranca() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </Tabela>
         </>
       )}
 

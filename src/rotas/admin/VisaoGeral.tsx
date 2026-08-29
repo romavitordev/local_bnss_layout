@@ -4,6 +4,7 @@ import {
   api, ErroApi, type Distribuicao, type Metricas, type SaudeInventario,
   type Series,
 } from "../../api/cliente";
+import Tabela from "../../componentes/Tabela";
 
 function reais(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", {
@@ -138,7 +139,7 @@ export default function VisaoGeral() {
         <>
           <h2 className="titulo-secao">Distribuição</h2>
           <div className="duas-colunas">
-            <div className="tabela-rolavel">
+            <Tabela naoEmpilhar>
               <table>
                 <caption>Contas por plano</caption>
                 <thead>
@@ -156,9 +157,9 @@ export default function VisaoGeral() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Tabela>
 
-            <div className="tabela-rolavel">
+            <Tabela naoEmpilhar>
               <table>
                 <caption>Reservas por situação</caption>
                 <thead>
@@ -178,7 +179,7 @@ export default function VisaoGeral() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Tabela>
           </div>
 
           <div className="indicadores" style={{ marginTop: 16 }}>

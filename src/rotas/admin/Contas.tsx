@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ErroApi, type ContaAdmin, type Exclusao } from "../../api/cliente";
+import Tabela from "../../componentes/Tabela";
 
 /**
  * Gestão de contas.
@@ -92,7 +93,7 @@ export default function Contas() {
       {contas.length === 0 ? (
         <p className="vazio">Nenhuma conta encontrada.</p>
       ) : (
-        <div className="tabela-rolavel">
+        <Tabela>
           <table>
             <thead>
               <tr>
@@ -148,7 +149,7 @@ export default function Contas() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Tabela>
       )}
     </section>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ErroApi, type InteressadoAdmin } from "../../api/cliente";
+import Tabela from "../../componentes/Tabela";
 
 export default function Interessados() {
   const [lista, setLista] = useState<InteressadoAdmin[]>([]);
@@ -54,7 +55,7 @@ export default function Interessados() {
       {lista.length === 0 ? (
         <p className="vazio">Ninguém se cadastrou pela landing ainda.</p>
       ) : (
-        <div className="tabela-rolavel">
+        <Tabela>
           <table>
             <thead>
               <tr>
@@ -101,7 +102,7 @@ export default function Interessados() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Tabela>
       )}
     </section>
   );

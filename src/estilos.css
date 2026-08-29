@@ -355,18 +355,35 @@ textarea { resize: vertical; line-height: 1.55; }
 .barra-preenchida.cheia { background: var(--alerta); }
 
 /* ---------------------------------------------------------------- tabelas */
-.tabela-rolavel {
-  overflow-x: auto; border: 1px solid var(--linha);
+/* Botão de tema: sistema → claro → escuro. Ver src/tema.ts.
+   `flex: none` pelo mesmo motivo do `.usuario`: quem cede espaço na barra é o
+   menu do meio, e um controle que sai da viewport é um controle que não
+   existe. */
+.botao-tema {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--linha-forte);
+  background: var(--superficie-2);
+  color: var(--apagado);
+  cursor: pointer;
+  transition: color 0.2s var(--saida), border-color 0.2s var(--saida),
+              transform 0.18s var(--saida);
+}
+.botao-tema:hover { color: var(--acento); border-color: var(--acento); }
+.botao-tema:active { transform: scale(0.94); }
+/* Na landing a barra é mais leve: sem preenchimento, só o traço. */
+.botao-tema.compacto { background: transparent; border-color: transparent; }
+.botao-tema.compacto:hover { border-color: var(--linha-forte); }
+
+/* Tabela que ACOMPANHA a tela, em vez de rolar de lado.
+   Ver src/componentes/Tabela.tsx para o porquê e para de onde vêm os rótulos. */
+.tabela {
+  border: 1px solid var(--linha);
   border-radius: var(--raio); background: var(--superficie); box-shadow: var(--elev-1);
 }
-/* O `min-width: 560px` que morava aqui foi escopado para `.tabela-rolavel`.
-   Global, ele obrigava TODA tabela a ter 560px — inclusive as de três colunas
-   curtas do checkout e do console, que então estouravam a tela do celular em
-   230–260px. É a segunda vez que esta regra vaza para onde não devia: a
-   primeira foi na tabela da landing. Largura mínima só faz sentido dentro de
-   um contêiner que sabe rolar. */
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-.tabela-rolavel table { min-width: 560px; }
 caption {
   text-align: left; font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.2em;
@@ -382,7 +399,19 @@ thead th {
 tbody tr { transition: background 0.18s var(--saida); }
 tbody tr:hover { background: var(--superficie-2); }
 tbody tr:last-child td { border-bottom: 0; }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  /* O sinal de menos precisa ficar colado no numero. Sem isto a
+     celula quebra depois do hifen em tela estreita e a tabela mostra
+     "-" numa linha e "R$ 207,00" na seguinte: num quadro de
+     cobranca, um valor negativo que parece positivo.
+
+     Vale para `.checkout-linhas .num` tambem: aquela regra nao declara
+     `white-space`, e especificidade decide por PROPRIEDADE, nao por
+     bloco. */
+  white-space: nowrap;
+}
 code {
   font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.86em;
   background: var(--superficie-2); border: 1px solid var(--linha);
@@ -847,8 +876,14 @@ code {
   .conta-desktop { display: none; }
   .botao-conta { display: flex; }
 
-  /* Com `.conta-desktop` escondido, quem vai para a direita é o menu. */
-  .usuario { margin-left: auto; }
+  /* Com `.conta-desktop` escondido, quem vai para a direita é o menu.
+     O `margin-left: auto` vai no BOTÃO DE TEMA, e não no `.usuario`: só a
+     primeira margem automática da linha consome o espaço livre, então é ela
+     que decide onde o grupo da direita começa. Colocada no `.usuario`, o botão
+     de tema ficava para trás, grudado na marca — parecendo parte dela em vez
+     de um controle da conta. */
+  .botao-tema { margin-left: auto; }
+  .usuario { margin-left: 0; }
 
   .menu-tira .menu-link { padding: 6px 12px; font-size: 13px; }
   .marca-nome { font-size: 1.05rem; }
@@ -1031,7 +1066,7 @@ code {
 /* Linha de tabela ao passar o ponteiro: o alvo de clique fica óbvio numa
    lista longa, que é onde se erra a linha. */
 tbody tr { transition: background 0.16s var(--saida); }
-.tabela-rolavel tbody tr:hover { background: var(--superficie-2); }
+.tabela tbody tr:hover { background: var(--superficie-2); }
 
 /* A barra de progresso da carteira anima ao mudar — ver o número saltar não
    diz que ele mudou; ver a barra crescer, diz. */
@@ -1068,4 +1103,100 @@ tbody tr { transition: background 0.16s var(--saida); }
   .marca-simbolo { width: 20px; height: 20px; }
   .console .topo-conteudo { gap: 10px; }
   .console .marca-nome { font-size: 0.98rem; }
+}
+
+/* =============================================================================
+   TABELAS EM TELA ESTREITA — empilham, não rolam
+   =============================================================================
+   Rolagem lateral dentro da página é a pior forma de mostrar tabela no
+   telefone: metade das colunas fica escondida, o gesto compete com o de rolar
+   a página, e quem lê não tem como saber que existe mais coisa à direita. Numa
+   tabela de cobrança, a coluna escondida costuma ser justamente o valor.
+
+   Abaixo de 720px cada linha vira um cartão de pares `rótulo: valor`. O rótulo
+   sai do `data-rotulo` que o componente copia do `<thead>` — nunca escrito à
+   mão na célula, porque cópia do texto do cabeçalho diverge dele.
+
+   No fim do arquivo de propósito: `@media` NÃO aumenta especificidade, e uma
+   regra estreita declarada antes da regra base perde para ela. Já aconteceu
+   neste projeto. */
+@media (max-width: 719px) {
+  .tabela:not(.tabela-nao-empilha) table,
+  .tabela:not(.tabela-nao-empilha) tbody,
+  .tabela:not(.tabela-nao-empilha) tr,
+  .tabela:not(.tabela-nao-empilha) td {
+    display: block;
+    width: 100%;
+  }
+
+  /* Escondido dos olhos, presente para leitor de tela: a tabela continua sendo
+     uma tabela, com cabeçalhos associados. `display: none` a desmontaria. */
+  .tabela:not(.tabela-nao-empilha) thead,
+  .tabela:not(.tabela-nao-empilha) thead th {
+    /* `display: block` também no thead, e não só nas linhas.
+       Sem isto ele continua sendo um `table-header-group`, para o qual
+       `width: 1px` e `overflow: hidden` não se aplicam — o cabeçalho seguia
+       ocupando a largura real fora da tela e a PÁGINA ganhava rolagem
+       horizontal, mesmo com a tabela já empilhada. */
+    display: block;
+  }
+  .tabela:not(.tabela-nao-empilha) thead {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tabela:not(.tabela-nao-empilha) tbody tr {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--linha);
+  }
+  .tabela:not(.tabela-nao-empilha) tbody tr:last-child { border-bottom: 0; }
+
+  .tabela:not(.tabela-nao-empilha) td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 5px 0;
+    border-bottom: 0;
+    text-align: left;
+    /* Sem estes dois, um e-mail longo numa célula empilhada empurra a largura
+       da linha e a página inteira ganha rolagem horizontal — exatamente o que
+       este bloco existe para eliminar. Item de flex não encolhe abaixo do
+       conteúdo por padrão, e palavra sem espaço não quebra sozinha. */
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* Vale para o conteúdo aninhado da célula também (nome + e-mail em `strong`
+     e `span`, por exemplo): a regra de quebra não atravessa o filho. */
+  .tabela:not(.tabela-nao-empilha) td * { min-width: 0; overflow-wrap: anywhere; }
+
+  .tabela:not(.tabela-nao-empilha) td::before {
+    content: attr(data-rotulo);
+    /* Nunca encolhe e nunca quebra no meio da palavra.
+       Com `overflow-wrap: anywhere` herdado da célula, "CONTA" saía impresso
+       como "CON / TA" em duas linhas — rótulo picado parece defeito, e é o
+       primeiro texto que o olho encontra na linha. Quem quebra é o VALOR, que
+       já sabe fazer isso desde que a célula ganhou `overflow-wrap`. */
+    flex: 0 0 auto;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.16em; color: var(--apagado);
+  }
+
+  /* A célula sem rótulo (coluna de ação, por exemplo) ocupa a linha inteira. */
+  .tabela:not(.tabela-nao-empilha) td:not([data-rotulo])::before { content: none; }
+
+  /* `.num` alinha à direita no modo tabela; empilhado, o valor já está à
+     direita do próprio rótulo, e forçar de novo não muda nada — mas a regra
+     base do `text-align` precisa ser neutralizada para o `flex` mandar. */
+  .tabela:not(.tabela-nao-empilha) td.num { text-align: right; }
+
+  /* A que não empilha ganha rolagem como último recurso — mas ela é marcada
+     assim justamente porque cabe, então a barra nunca deve aparecer. */
+  .tabela-nao-empilha { overflow-x: auto; }
 }

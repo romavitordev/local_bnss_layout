@@ -7,6 +7,7 @@ import MenuConta from "./MenuConta";
 import {
   IconeCarteira, IconePainel, IconePressao, IconeTerritorios,
 } from "./Icones";
+import BotaoTema from "./BotaoTema";
 
 /**
  * Casca do painel do cliente.
@@ -112,6 +113,7 @@ export default function Layout() {
 
           {/* No celular os links de conta viram este menu. É o mesmo conteúdo
               em duas formas, nunca as duas ao mesmo tempo. */}
+          <BotaoTema />
           <MenuConta
             nome={conta?.nome}
             email={conta?.email}

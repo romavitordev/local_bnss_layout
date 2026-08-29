@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   api, ErroApi, type ContaAdmin, type Metricas, type PressaoAdmin,
 } from "../../api/cliente";
+import Tabela from "../../componentes/Tabela";
 
 function reais(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", {
@@ -113,7 +114,7 @@ export default function Inventario() {
       {contas.length === 0 ? (
         <p className="vazio">Nenhuma conta encontrada.</p>
       ) : (
-        <div className="tabela-rolavel">
+        <Tabela>
           <table>
             <thead>
               <tr>
@@ -152,7 +153,7 @@ export default function Inventario() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Tabela>
       )}
 
       <h2 className="titulo-secao">Ocupação por cidade</h2>
@@ -164,7 +165,7 @@ export default function Inventario() {
       {pressao.length === 0 ? (
         <p className="vazio">Nenhuma cidade com inventário ainda.</p>
       ) : (
-        <div className="tabela-rolavel">
+        <Tabela>
           <table>
             <thead>
               <tr>
@@ -195,7 +196,7 @@ export default function Inventario() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Tabela>
       )}
     </section>
   );

@@ -9,6 +9,31 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
     <title>Leads — Carteira de Reservas</title>
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+      <!--
+      Aplica o tema escolhido ANTES da primeira pintura.
+
+      Se isto ficasse só no React, quem escolheu claro num sistema escuro veria
+      a tela piscar em preto a cada carregamento. Bloqueante de propósito: são
+      microssegundos, e o custo de não bloquear é justamente a piscada.
+
+      A chave é a mesma de `src/tema.ts` (CHAVE_TEMA).
+    -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("leads:tema");
+          if (t === "claro" || t === "escuro") {
+            document.documentElement.setAttribute(
+              "data-theme", t === "claro" ? "light" : "dark"
+            );
+            document.documentElement.style.colorScheme =
+              t === "claro" ? "light" : "dark";
+          }
+        } catch (e) {
+          /* Modo privado bloqueia localStorage. Segue no tema do sistema. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

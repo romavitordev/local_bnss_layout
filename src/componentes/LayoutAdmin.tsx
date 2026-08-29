@@ -4,6 +4,7 @@ import { useAuth } from "../contexto/Auth";
 import Marca from "./Marca";
 import { MARCA } from "../marca";
 import MenuConta from "./MenuConta";
+import BotaoTema from "./BotaoTema";
 
 /**
  * Casca do console da plataforma.
@@ -86,6 +87,8 @@ export default function LayoutAdmin() {
               Sair
             </button>
           </div>
+
+          <BotaoTema />
 
           <MenuConta
             nome={conta?.nome}
